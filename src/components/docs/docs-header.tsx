@@ -31,21 +31,21 @@ export function DocsHeader() {
           </Link>
         </div>
 
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex items-center gap-2 text-sm">
+          <Button
+            nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={<Link href="/preview" />}
+          >
+            See preview
+          </Button>
           <Link
             href={REPO_URL}
             className="rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
           >
             GitHub
           </Link>
-          <Button
-            nativeButton={false}
-            size="sm"
-            className="ml-1"
-            render={<Link href="/dashboard" />}
-          >
-            Dashboard
-          </Button>
         </nav>
       </div>
     </header>

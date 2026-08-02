@@ -89,11 +89,25 @@ function groupLiveVisitors(events: LiveEvent[], now: number): LiveVisitor[] {
     });
 }
 
-function useLiveVisitors(siteId: string) {
-  const [events, setEvents] = useState<LiveEvent[]>([]);
+function useLiveVisitors(
+  siteId: string,
+  options?: { readOnly?: boolean; initialEvents?: LiveEvent[] },
+) {
+  const readOnly = options?.readOnly ?? false;
+  const initialEvents = options?.initialEvents;
+  const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
   const [now, setNow] = useState(() => Date.now());
+  const events = useMemo(
+    () => (readOnly ? (initialEvents ?? []) : liveEvents),
+    [readOnly, initialEvents, liveEvents],
+  );
 
   useEffect(() => {
+    if (readOnly) {
+      const tick = window.setInterval(() => setNow(Date.now()), 15_000);
+      return () => window.clearInterval(tick);
+    }
+
     const supabase = createClient();
     let cancelled = false;
 
@@ -108,7 +122,7 @@ function useLiveVisitors(siteId: string) {
         .limit(100);
 
       if (!cancelled && data) {
-        setEvents(data);
+        setLiveEvents(data);
       }
     }
 
@@ -126,7 +140,7 @@ function useLiveVisitors(siteId: string) {
         },
         (payload) => {
           const row = payload.new as LiveEvent;
-          setEvents((prev) => [row, ...prev].slice(0, 120));
+          setLiveEvents((prev) => [row, ...prev].slice(0, 120));
         },
       )
       .subscribe();
@@ -138,7 +152,7 @@ function useLiveVisitors(siteId: string) {
       window.clearInterval(tick);
       void supabase.removeChannel(channel);
     };
-  }, [siteId]);
+  }, [siteId, readOnly]);
 
   const visitors = useMemo(
     () => groupLiveVisitors(events, now),
@@ -156,11 +170,18 @@ function useLiveVisitors(siteId: string) {
 export function UsersDashboard({
   siteId,
   users,
+  readOnly = false,
+  initialLiveEvents,
 }: {
   siteId: string;
   users: SiteUser[];
+  readOnly?: boolean;
+  initialLiveEvents?: LiveEvent[];
 }) {
-  const { visitors, liveHashes, now } = useLiveVisitors(siteId);
+  const { visitors, liveHashes, now } = useLiveVisitors(siteId, {
+    readOnly,
+    initialEvents: initialLiveEvents,
+  });
   const online = visitors.length;
 
   return (

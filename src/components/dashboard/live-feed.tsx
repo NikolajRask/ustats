@@ -29,11 +29,28 @@ function relativeTime(iso: string, now: number) {
   return new Date(iso).toLocaleTimeString();
 }
 
-export function LiveFeed({ siteId }: { siteId: string }) {
-  const [events, setEvents] = useState<LiveEvent[]>([]);
+export function LiveFeed({
+  siteId,
+  initialEvents,
+  readOnly = false,
+}: {
+  siteId: string;
+  initialEvents?: LiveEvent[];
+  readOnly?: boolean;
+}) {
+  const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([]);
   const [now, setNow] = useState(() => Date.now());
+  const events = useMemo(
+    () => (readOnly ? (initialEvents ?? []) : liveEvents),
+    [readOnly, initialEvents, liveEvents],
+  );
 
   useEffect(() => {
+    if (readOnly) {
+      const tick = window.setInterval(() => setNow(Date.now()), 15_000);
+      return () => window.clearInterval(tick);
+    }
+
     const supabase = createClient();
     let cancelled = false;
 
@@ -48,7 +65,7 @@ export function LiveFeed({ siteId }: { siteId: string }) {
         .limit(30);
 
       if (!cancelled && data) {
-        setEvents(data);
+        setLiveEvents(data);
       }
     }
 
@@ -66,7 +83,7 @@ export function LiveFeed({ siteId }: { siteId: string }) {
         },
         (payload) => {
           const row = payload.new as LiveEvent;
-          setEvents((prev) => [row, ...prev].slice(0, 40));
+          setLiveEvents((prev) => [row, ...prev].slice(0, 40));
         },
       )
       .subscribe();
@@ -78,7 +95,7 @@ export function LiveFeed({ siteId }: { siteId: string }) {
       window.clearInterval(tick);
       void supabase.removeChannel(channel);
     };
-  }, [siteId]);
+  }, [siteId, readOnly]);
 
   const online = useMemo(() => {
     const cutoff = now - ONLINE_WINDOW_MS;

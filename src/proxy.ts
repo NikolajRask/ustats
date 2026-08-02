@@ -1,12 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { isMarketingMode, isMarketingPath } from "@/lib/app-mode";
+import {
+  canServeMarketingPages,
+  canServeProductPages,
+  isMarketingPath,
+  isProductPath,
+} from "@/lib/app-mode";
 import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (!isMarketingMode() && isMarketingPath(pathname)) {
+  if (!canServeMarketingPages() && isMarketingPath(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/mode-gate";
+    return NextResponse.rewrite(url);
+  }
+
+  if (!canServeProductPages() && isProductPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/mode-gate";
     return NextResponse.rewrite(url);

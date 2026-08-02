@@ -33,6 +33,7 @@ export function CustomEventsList({
   countsByDay,
   visitorsByDay,
   aliases,
+  readOnly = false,
 }: {
   siteId: string;
   rows: BreakdownRow[];
@@ -40,6 +41,7 @@ export function CustomEventsList({
   countsByDay: Record<string, Record<string, number>>;
   visitorsByDay: Record<string, Record<string, number>>;
   aliases: EventAliasMap;
+  readOnly?: boolean;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [aliasEdits, setAliasEdits] = useState<EventAliasMap>({});
@@ -147,6 +149,7 @@ export function CustomEventsList({
               title={selectedAlias.title}
               description={selectedAlias.description}
               series={selectedSeries}
+              readOnly={readOnly}
               onSaved={(next) => {
                 setAliasEdits((prev) => {
                   const copy = { ...prev };
@@ -174,6 +177,7 @@ function EventDetailSheet({
   title: initialTitle,
   description: initialDescription,
   series,
+  readOnly = false,
   onSaved,
 }: {
   siteId: string;
@@ -183,6 +187,7 @@ function EventDetailSheet({
   title: string;
   description: string;
   series: TimeseriesPoint[];
+  readOnly?: boolean;
   onSaved: (alias: { title: string; description: string }) => void;
 }) {
   const [title, setTitle] = useState(initialTitle);
@@ -255,55 +260,71 @@ function EventDetailSheet({
           />
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4 pt-4">
-          <div>
+        {!readOnly ? (
+          <form onSubmit={handleSave} className="space-y-4 pt-4">
+            <div>
+              <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                Alias
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Give this event a readable title and optional description.
+              </p>
+            </div>
+
+            {error ? (
+              <p
+                className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+                role="alert"
+              >
+                {error}
+              </p>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor="event-alias-title">Title</Label>
+              <Input
+                id="event-alias-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Signup started"
+                maxLength={120}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="event-alias-description">Description</Label>
+              <textarea
+                id="event-alias-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Fired when a visitor begins the signup flow"
+                maxLength={500}
+                rows={3}
+                className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
+              />
+            </div>
+
+            <SheetFooter className="px-0">
+              <Button type="submit" disabled={pending || !dirty}>
+                {pending ? "Saving…" : "Save alias"}
+              </Button>
+            </SheetFooter>
+          </form>
+        ) : initialTitle.trim() || initialDescription.trim() ? (
+          <div className="space-y-2 border-t border-border/60 pt-4">
             <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
               Alias
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Give this event a readable title and optional description.
-            </p>
+            {initialTitle.trim() ? (
+              <p className="text-sm font-medium">{initialTitle}</p>
+            ) : null}
+            {initialDescription.trim() ? (
+              <p className="text-sm text-muted-foreground">
+                {initialDescription}
+              </p>
+            ) : null}
           </div>
-
-          {error ? (
-            <p
-              className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-              role="alert"
-            >
-              {error}
-            </p>
-          ) : null}
-
-          <div className="space-y-2">
-            <Label htmlFor="event-alias-title">Title</Label>
-            <Input
-              id="event-alias-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Signup started"
-              maxLength={120}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="event-alias-description">Description</Label>
-            <textarea
-              id="event-alias-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Fired when a visitor begins the signup flow"
-              maxLength={500}
-              rows={3}
-              className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
-            />
-          </div>
-
-          <SheetFooter className="px-0">
-            <Button type="submit" disabled={pending || !dirty}>
-              {pending ? "Saving…" : "Save alias"}
-            </Button>
-          </SheetFooter>
-        </form>
+        ) : null}
       </div>
     </>
   );

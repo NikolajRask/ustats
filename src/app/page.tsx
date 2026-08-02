@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { LandingChart } from "@/components/landing-chart";
 import { PricingCalculator } from "@/components/pricing-calculator";
-import { isMarketingMode } from "@/lib/app-mode";
+import { canServeMarketingPages } from "@/lib/app-mode";
 import {
   DOWNLOAD_URL,
   REPO_URL,
@@ -21,7 +21,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  if (!isMarketingMode()) {
+  if (!canServeMarketingPages()) {
     return {
       title: SITE_NAME,
       robots: { index: false, follow: false },
@@ -102,7 +102,7 @@ const faqs = [
 ];
 
 export default async function HomePage() {
-  if (!isMarketingMode()) {
+  if (!canServeMarketingPages()) {
     const supabase = await createClient();
     const {
       data: { user },
@@ -168,6 +168,12 @@ export default async function HomePage() {
         </span>
         <nav className="flex items-center gap-1 text-sm">
           <a
+            href="/preview"
+            className="px-3.5 py-2 text-(--land-muted) transition-colors hover:text-(--land-fg)"
+          >
+            Preview
+          </a>
+          <a
             href="/docs"
             className="px-3.5 py-2 text-(--land-muted) transition-colors hover:text-(--land-fg)"
           >
@@ -231,6 +237,12 @@ export default async function HomePage() {
             >
               Download for your project
             </a>
+            <Link
+              href="/preview"
+              className="rounded-sm border border-(--land-fg)/15 bg-(--land-surface) px-5 py-3 text-sm font-medium backdrop-blur-sm transition-colors hover:border-(--land-fg)/30"
+            >
+              Try the dashboard
+            </Link>
             <a
               href={REPO_URL}
               className="rounded-sm border border-(--land-fg)/15 bg-(--land-surface) px-5 py-3 text-sm font-medium backdrop-blur-sm transition-colors hover:border-(--land-fg)/30"

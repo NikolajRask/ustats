@@ -1,6 +1,4 @@
-import { Suspense } from "react";
-
-import { FunnelDashboard } from "@/components/dashboard/funnel-dashboard";
+import { FunnelsView } from "@/components/dashboard/views/funnels-view";
 import {
   getFunnelStats,
   listFunnels,
@@ -36,20 +34,14 @@ export default async function FunnelsPage({
     : null;
 
   return (
-    <Suspense
-      fallback={
-        <div className="h-64 animate-pulse rounded-xl border border-border/70 bg-card/60" />
-      }
-    >
-      <FunnelDashboard
-        siteId={site.id}
-        funnels={funnels}
-        selectedFunnel={selectedFunnel}
-        stats={stats}
-        fromDate={fromDate}
-        toDate={toDate}
-        error={sp.error}
-      />
-    </Suspense>
+    <FunnelsView
+      siteId={site.id}
+      funnels={funnels}
+      selectedFunnel={selectedFunnel}
+      stats={stats}
+      fromDate={fromDate}
+      toDate={toDate}
+      error={sp.error}
+    />
   );
 }

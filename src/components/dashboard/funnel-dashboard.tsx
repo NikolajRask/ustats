@@ -43,6 +43,7 @@ export function FunnelDashboard({
   fromDate,
   toDate,
   error,
+  readOnly = false,
 }: {
   siteId: string;
   funnels: Funnel[];
@@ -51,6 +52,7 @@ export function FunnelDashboard({
   fromDate: string;
   toDate: string;
   error?: string;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -91,7 +93,7 @@ export function FunnelDashboard({
             Track visitor progress through your conversion flow
           </p>
         </div>
-        {funnels.length > 0 ? (
+        {funnels.length > 0 && !readOnly ? (
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -153,19 +155,21 @@ export function FunnelDashboard({
         <Card className="bg-card/80">
           <CardHeader>
             <CardTitle className="font-display text-lg font-semibold tracking-tight">
-              Create your first funnel
+              {readOnly ? "No funnels in sample data" : "Create your first funnel"}
             </CardTitle>
             <CardDescription>
               Combine page paths and custom events into an ordered conversion
               flow. Visitors must complete each step in sequence.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={openCreate}>
-              <PlusIcon data-icon="inline-start" />
-              New funnel
-            </Button>
-          </CardContent>
+          {!readOnly ? (
+            <CardContent>
+              <Button onClick={openCreate}>
+                <PlusIcon data-icon="inline-start" />
+                New funnel
+              </Button>
+            </CardContent>
+          ) : null}
         </Card>
       ) : (
         <>
@@ -255,13 +259,15 @@ export function FunnelDashboard({
         </>
       )}
 
-      <FunnelEditor
-        key={editing?.id ?? "new"}
-        siteId={siteId}
-        funnel={editing}
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-      />
+      {!readOnly ? (
+        <FunnelEditor
+          key={editing?.id ?? "new"}
+          siteId={siteId}
+          funnel={editing}
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+        />
+      ) : null}
     </div>
   );
 }

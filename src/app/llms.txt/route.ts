@@ -1,4 +1,4 @@
-import { isMarketingMode } from "@/lib/app-mode";
+import { canServeMarketingPages } from "@/lib/app-mode";
 import { SEO_COMPARISONS, SEO_TOPICS } from "@/lib/seo/content";
 import {
   DOWNLOAD_URL,
@@ -8,7 +8,7 @@ import {
 } from "@/lib/seo/site";
 
 export function GET() {
-  if (!isMarketingMode()) {
+  if (!canServeMarketingPages()) {
     return new Response(null, { status: 404 });
   }
 

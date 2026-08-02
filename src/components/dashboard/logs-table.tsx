@@ -154,15 +154,17 @@ export function LogsTable({
   range,
   pageSize,
   hasMore: initialHasMore,
+  readOnly = false,
 }: {
   logs: EventLogRow[];
   siteId: string;
   range: DateRange;
   pageSize: number;
   hasMore: boolean;
+  readOnly?: boolean;
 }) {
   const [logs, setLogs] = useState(initialLogs);
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [hasMore, setHasMore] = useState(initialHasMore && !readOnly);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<EventLogRow | null>(null);

@@ -18,7 +18,7 @@ cp .env.example .env.local
 4. Fill env vars (see `.env.example` and the Environment variables docs under `/docs/environment-variables` when running with `USTATS_MODE=marketing`).
 5. Run `npm run dev` and open `http://localhost:3000`.
 
-Leave `USTATS_MODE` unset for the app/dashboard. Set `USTATS_MODE=marketing` only when working on the public landing/docs site.
+Leave `USTATS_MODE` unset for the app/dashboard. Set `USTATS_MODE=marketing` only for the public landing/docs site. Set `USTATS_MODE=development` locally when you need both surfaces.
 
 ## Project conventions
 

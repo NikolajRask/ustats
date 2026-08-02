@@ -154,15 +154,17 @@ export function ErrorsTable({
   groups: initialGroups,
   pageSize,
   hasMore: initialHasMore,
+  readOnly = false,
 }: {
   siteId: string;
   range: DateRange;
   groups: ErrorGroupRow[];
   pageSize: number;
   hasMore: boolean;
+  readOnly?: boolean;
 }) {
   const [loadedGroups, setLoadedGroups] = useState(initialGroups);
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [hasMore, setHasMore] = useState(initialHasMore && !readOnly);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoadingMore, startLoadMore] = useTransition();
   const [statusOverrides, setStatusOverrides] = useState<
@@ -263,6 +265,12 @@ export function ErrorsTable({
 
   async function openGroup(row: ErrorGroupRow) {
     setSelectedId(row.id);
+    if (readOnly) {
+      setOccurrences([]);
+      setLoadingOcc(false);
+      return;
+    }
+
     setLoadingOcc(true);
     setOccurrences([]);
 
@@ -287,7 +295,7 @@ export function ErrorsTable({
   }
 
   function updateStatus(status: ErrorGroupStatus) {
-    if (!selected) return;
+    if (!selected || readOnly) return;
     const groupId = selected.id;
 
     startTransition(async () => {
@@ -584,7 +592,7 @@ export function ErrorsTable({
                   {selected.status}
                 </Badge>
                 <div className="ml-auto flex gap-2">
-                  {selected.status !== "resolved" ? (
+                  {!readOnly && selected.status !== "resolved" ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -593,7 +601,8 @@ export function ErrorsTable({
                     >
                       Resolve
                     </Button>
-                  ) : (
+                  ) : null}
+                  {!readOnly && selected.status === "resolved" ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -602,8 +611,8 @@ export function ErrorsTable({
                     >
                       Reopen
                     </Button>
-                  )}
-                  {selected.status !== "ignored" ? (
+                  ) : null}
+                  {!readOnly && selected.status !== "ignored" ? (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -675,7 +684,9 @@ export function ErrorsTable({
                     <p className="text-sm text-muted-foreground">Loading…</p>
                   ) : occurrences.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No occurrences loaded.
+                      {readOnly
+                        ? "Occurrence details are not included in the sample preview."
+                        : "No occurrences loaded."}
                     </p>
                   ) : (
                     <ul className="space-y-2">

@@ -143,7 +143,9 @@ DISABLE_SIGNUP=true`}</code>
       <p>
         Optional: set <code>OPENAI_API_KEY</code> if you want the dashboard AI
         assistant. Do <strong>not</strong> set <code>USTATS_MODE=marketing</code>{" "}
-        on a self-host — that mode is for the public marketing site only.
+        on a self-host — that mode is for the public marketing site only (and
+        blocks login/dashboard). Use <code>development</code> only for local
+        work when you need both surfaces.
       </p>
       <ol start={3}>
         <li>

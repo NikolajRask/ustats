@@ -14,7 +14,7 @@ const headings = [
   { id: "supabase-auth", title: "Supabase Auth" },
   { id: "bootstrap", title: "First admin bootstrap" },
   { id: "instance-settings", title: "Instance settings" },
-  { id: "modes", title: "App vs marketing mode" },
+  { id: "modes", title: "App, marketing, and development" },
 ];
 
 export default function DocsConfigurationPage() {
@@ -82,13 +82,22 @@ export default function DocsConfigurationPage() {
         under each site&apos;s Settings page.
       </p>
 
-      <h2 id="modes">App vs marketing mode</h2>
-      <p>
-        Leave <code>USTATS_MODE</code> unset (or <code>app</code>) for
-        self-host: <code>/</code> is login/dashboard. Set{" "}
-        <code>USTATS_MODE=marketing</code> only for the public project site
-        (landing, docs, SEO pages).
-      </p>
+      <h2 id="modes">App, marketing, and development</h2>
+      <ul>
+        <li>
+          <code>app</code> (default / unset) — self-host: <code>/</code> goes to
+          login or dashboard; docs and SEO pages return 404
+        </li>
+        <li>
+          <code>marketing</code> — public project site: landing, docs, and SEO;
+          <code>/login</code>, <code>/dashboard</code>, and auth routes return
+          404
+        </li>
+        <li>
+          <code>development</code> — local full stack: marketing and product
+          routes are both available
+        </li>
+      </ul>
     </DocsArticle>
   );
 }

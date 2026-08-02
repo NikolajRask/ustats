@@ -86,8 +86,9 @@ export default function DocsEnvPage() {
               <code>USTATS_MODE</code>
             </td>
             <td>
-              <code>app</code> (default) or <code>marketing</code> for the
-              public landing + docs site
+              <code>app</code> (default) = login/dashboard only;{" "}
+              <code>marketing</code> = public landing + docs (product routes
+              404); <code>development</code> = everything available
             </td>
           </tr>
           <tr>

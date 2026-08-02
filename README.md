@@ -58,7 +58,7 @@ Fill in:
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (collector inserts + bootstrap) |
 | `USTATS_HASH_SALT` | Long random string for visitor hashing |
 | `NEXT_PUBLIC_APP_URL` | Public URL of this install (for embed snippets) |
-| `USTATS_MODE` | Optional — `app` (default) serves login/dashboard at `/`; set `marketing` for the public landing + docs site |
+| `USTATS_MODE` | Optional — `app` (default) login/dashboard only; `marketing` public landing + docs (no product UI); `development` everything |
 | `OPENAI_API_KEY` | Optional — enables the dashboard AI assistant |
 | `DISABLE_SIGNUP` | Set to `true` to hide/reject public sign up (recommended for self-host) |
 | `USTATS_BOOTSTRAP_EMAIL` | Optional — email for the first admin when Auth has no users |
@@ -77,7 +77,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) — you’ll land on sign-in (or the dashboard if already authenticated). Add a site and copy the embed snippet. After the first user exists, remove the bootstrap env vars.
 
-The landing page, docs, and SEO pages are only served when `USTATS_MODE=marketing` (used for the public project site). Self-host installs leave this unset.
+The landing page, docs, and SEO pages are served when `USTATS_MODE` is `marketing` or `development`. Self-host installs leave this unset (`app`). Use `development` locally when you need both the marketing site and the dashboard.
 
 ### 5. Embed the tracker
 
