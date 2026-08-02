@@ -53,6 +53,26 @@ const phases: RoadmapPhase[] = [
         body: "Visitor profiles, session logs, and a realtime event stream.",
         status: "shipped",
       },
+      {
+        title: "Instance roles & staff users",
+        body: "Admin, Co-Admin, and Guest roles. Staff create users with email + password and assign guests to sites (viewers stay read-only).",
+        status: "shipped",
+      },
+      {
+        title: "Retention & privacy controls",
+        body: "Per-site data retention windows and optional cross-day visitor tracking, with clear dashboard warnings.",
+        status: "shipped",
+      },
+      {
+        title: "Optional AI assistant",
+        body: "Dashboard chat for exploring stats and creating funnels when OPENAI_API_KEY is set.",
+        status: "shipped",
+      },
+      {
+        title: "Docs & self-host packaging",
+        body: "Install, deploy, embed, env, and experimental-feature guides. MIT release hygiene for early adopters.",
+        status: "shipped",
+      },
     ],
   },
   {
@@ -70,8 +90,13 @@ const phases: RoadmapPhase[] = [
         status: "building",
       },
       {
-        title: "Team invites",
-        body: "Invite collaborators to a site without sharing your Supabase login.",
+        title: "Graduate experimental features",
+        body: "Graphs, Features, and Reports already exist behind flags in src/lib/experimental.ts — harden and enable by default.",
+        status: "building",
+      },
+      {
+        title: "Email team invites",
+        body: "Invite collaborators by email instead of staff creating accounts with a password.",
         status: "building",
       },
     ],
@@ -119,6 +144,11 @@ const phases: RoadmapPhase[] = [
       {
         title: "Dashboard themes",
         body: "Light and dark preferences that match how you work.",
+        status: "planned",
+      },
+      {
+        title: "Official Docker image",
+        body: "A maintained container path for hosts that prefer Docker over Vercel.",
         status: "planned",
       },
     ],

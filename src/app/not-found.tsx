@@ -1,6 +1,14 @@
 import Link from "next/link";
 
+import { getUstatsMode } from "@/lib/app-mode";
+
 export default function NotFound() {
+  const mode = getUstatsMode();
+  const secondary =
+    mode === "marketing"
+      ? { href: "/preview", label: "Go to preview", short: "Preview" }
+      : { href: "/dashboard", label: "Go to dashboard", short: "Dashboard" };
+
   return (
     <div className="landing relative flex min-h-screen flex-col overflow-hidden">
       <div aria-hidden className="landing-atmosphere pointer-events-none absolute inset-0" />
@@ -14,10 +22,10 @@ export default function NotFound() {
           ustats
         </Link>
         <Link
-          href="/dashboard"
+          href={secondary.href}
           className="rounded-sm bg-(--land-fg) px-3.5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
         >
-          Dashboard
+          {secondary.short}
         </Link>
       </header>
 
@@ -32,7 +40,7 @@ export default function NotFound() {
         </h1>
         <p className="mt-5 max-w-md text-base leading-relaxed text-(--land-muted) sm:text-lg">
           The page you’re looking for doesn’t exist — or it moved. Head home or
-          open your dashboard.
+          open your {mode === "marketing" ? "preview" : "dashboard"}.
         </p>
         <div className="mt-9 flex flex-wrap items-center gap-3">
           <Link
@@ -42,10 +50,10 @@ export default function NotFound() {
             Back to home
           </Link>
           <Link
-            href="/dashboard"
+            href={secondary.href}
             className="rounded-sm border border-(--land-fg)/15 bg-(--land-surface) px-5 py-3 text-sm font-medium backdrop-blur-sm transition-colors hover:border-(--land-fg)/30"
           >
-            Go to dashboard
+            {secondary.label}
           </Link>
         </div>
       </main>
