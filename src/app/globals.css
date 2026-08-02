@@ -378,6 +378,31 @@ body {
   border-radius: 0;
 }
 
+.docs-prose table {
+  width: 100%;
+  margin: 1.25rem 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.docs-prose th,
+.docs-prose td {
+  border: 1px solid color-mix(in oklch, var(--border) 85%, transparent);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.docs-prose th {
+  font-weight: 600;
+  background: color-mix(in oklch, var(--muted) 70%, transparent);
+  color: var(--foreground);
+}
+
+.docs-prose td code {
+  font-size: 0.8em;
+}
+
 .docs-callout {
   margin: 1.25rem 0;
   border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--border));

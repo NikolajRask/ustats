@@ -82,7 +82,6 @@ export function FeatureTimeChart({
         );
       }
 
-      let maxRanks = 0;
       const daySegments = days.map((day) => {
         const segments = features
           .map((feature) => ({
@@ -97,9 +96,12 @@ export function FeatureTimeChart({
             if (diff !== 0) return diff;
             return a.name.localeCompare(b.name);
           });
-        maxRanks = Math.max(maxRanks, segments.length);
         return { day, segments };
       });
+      const maxRanks = Math.max(
+        0,
+        ...daySegments.map((entry) => entry.segments.length),
+      );
 
       const ranks = Array.from({ length: maxRanks }, (_, index) => `r${index}`);
 

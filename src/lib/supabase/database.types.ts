@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      instance_settings: {
+        Row: {
+          id: boolean;
+          supabase_plan: "free" | "pro";
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: boolean;
+          supabase_plan?: "free" | "pro";
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: boolean;
+          supabase_plan?: "free" | "pro";
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      profiles: {
+        Row: {
+          id: string;
+          role: "admin" | "co_admin" | "guest";
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          role?: "admin" | "co_admin" | "guest";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          role?: "admin" | "co_admin" | "guest";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       sites: {
         Row: {
           id: string;
@@ -46,19 +85,19 @@ export type Database = {
         Row: {
           site_id: string;
           user_id: string;
-          role: "owner" | "admin";
+          role: "owner" | "admin" | "viewer";
           created_at: string;
         };
         Insert: {
           site_id: string;
           user_id: string;
-          role?: "owner" | "admin";
+          role?: "owner" | "admin" | "viewer";
           created_at?: string;
         };
         Update: {
           site_id?: string;
           user_id?: string;
-          role?: "owner" | "admin";
+          role?: "owner" | "admin" | "viewer";
           created_at?: string;
         };
         Relationships: [];
@@ -639,6 +678,10 @@ export type Database = {
         };
         Returns: number;
       };
+      get_database_usage: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
       get_site_stats: {
         Args: {
           p_site_id: string;
@@ -662,6 +705,9 @@ export type Database = {
 };
 
 export type Site = Database["public"]["Tables"]["sites"]["Row"];
+export type InstanceSettingsRow =
+  Database["public"]["Tables"]["instance_settings"]["Row"];
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type Event = Database["public"]["Tables"]["events"]["Row"];
 export type FunnelRow = Database["public"]["Tables"]["funnels"]["Row"];
 export type FunnelStepRow = Database["public"]["Tables"]["funnel_steps"]["Row"];

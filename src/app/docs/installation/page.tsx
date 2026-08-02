@@ -37,8 +37,10 @@ npm install`}</code>
 
       <h2 id="apply-migrations">Apply migrations</h2>
       <p>
-        Link the CLI to your project and push the schema, or paste the SQL from{" "}
-        <code>supabase/migrations</code> into the SQL editor.
+        Link the CLI to your project and push <strong>all</strong> files under{" "}
+        <code>supabase/migrations/</code>. Do not paste only the first{" "}
+        <code>init</code> SQL file — later migrations add roles, stats RPCs,
+        retention, and more.
       </p>
       <pre>
         <code>{`npx supabase link --project-ref YOUR_PROJECT_REF
@@ -63,8 +65,13 @@ npx supabase db push`}</code>
         <code>{`npm run dev`}</code>
       </pre>
       <p>
-        Open <code>http://localhost:3000</code>, create an account, and add your
-        first site.
+        Open <code>http://localhost:3000</code>, sign in (or use the bootstrap
+        env vars from <code>.env.example</code> on a fresh Auth project), and
+        add your first site.
+      </p>
+      <p>
+        When you are ready for production, follow{" "}
+        <a href="/docs/deploying">Deploying on Vercel and Supabase</a>.
       </p>
     </DocsArticle>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 
 import { saveEventAlias } from "@/app/dashboard/sites/[id]/events/actions";
@@ -42,12 +42,9 @@ export function CustomEventsList({
   aliases: EventAliasMap;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [aliasState, setAliasState] = useState(aliases);
+  const [aliasEdits, setAliasEdits] = useState<EventAliasMap>({});
+  const aliasState = { ...aliases, ...aliasEdits };
   const max = Math.max(...rows.map((r) => r.count), 1);
-
-  useEffect(() => {
-    setAliasState(aliases);
-  }, [aliases]);
 
   const selected = useMemo(
     () => rows.find((row) => row.key === selectedKey) ?? null,
@@ -142,6 +139,7 @@ export function CustomEventsList({
         <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">
           {selected ? (
             <EventDetailSheet
+              key={selected.key}
               siteId={siteId}
               eventName={selected.key}
               count={selected.count}
@@ -150,7 +148,7 @@ export function CustomEventsList({
               description={selectedAlias.description}
               series={selectedSeries}
               onSaved={(next) => {
-                setAliasState((prev) => {
+                setAliasEdits((prev) => {
                   const copy = { ...prev };
                   if (!next.title.trim() && !next.description.trim()) {
                     delete copy[selected.key];
@@ -191,12 +189,6 @@ function EventDetailSheet({
   const [description, setDescription] = useState(initialDescription);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setTitle(initialTitle);
-    setDescription(initialDescription);
-    setError(null);
-  }, [eventName, initialTitle, initialDescription]);
 
   const displayTitle = title.trim() || eventName;
   const dirty =

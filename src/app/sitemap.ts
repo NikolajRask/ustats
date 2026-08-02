@@ -1,10 +1,15 @@
 import type { MetadataRoute } from "next";
 
+import { isMarketingMode } from "@/lib/app-mode";
 import { getAllPublicSeoPaths } from "@/lib/seo/content";
 import { flattenDocsNav } from "@/lib/docs/nav";
 import { absoluteUrl, getSiteUrl } from "@/lib/seo/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  if (!isMarketingMode()) {
+    return [];
+  }
+
   const paths = new Set([
     ...getAllPublicSeoPaths(),
     ...flattenDocsNav().map((item) => item.href),

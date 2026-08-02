@@ -3,7 +3,7 @@
 import { geoEqualEarth, geoPath } from "d3-geo";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { alpha2ToNumeric } from "i18n-iso-countries";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 
@@ -172,7 +172,6 @@ export function WorldVisitorsMap({
   rows: BreakdownRow[];
   className?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [countries, setCountries] = useState<CountryFeature[] | null>(null);
   const [region, setRegion] = useState<MapRegion>("world");
   const [hover, setHover] = useState<HoverState>(null);
@@ -231,10 +230,11 @@ export function WorldVisitorsMap({
     };
   }, []);
 
-  useEffect(() => {
+  function changeRegion(next: MapRegion) {
+    setRegion(next);
     setHover(null);
     setHoverId(null);
-  }, [region]);
+  }
 
   const pathGen = useMemo(() => {
     const projection = geoEqualEarth().clipExtent([
@@ -287,7 +287,7 @@ export function WorldVisitorsMap({
   if (!countries) {
     return (
       <div className={cn("space-y-3", className)}>
-        <RegionSwitcher region={region} onChange={setRegion} />
+        <RegionSwitcher region={region} onChange={changeRegion} />
         <div
           className="flex h-[280px] items-center justify-center rounded-lg"
           style={{ background: BG }}
@@ -299,19 +299,13 @@ export function WorldVisitorsMap({
   }
 
   const hasData = maxVisitors > 0;
-  const tooltipLeft = (() => {
-    if (!hover || !containerRef.current) return 0;
-    const width = containerRef.current.clientWidth;
-    const tipWidth = 168;
-    return Math.min(Math.max(8, hover.x + 14), width - tipWidth - 8);
-  })();
+  const tooltipLeft = hover ? Math.max(8, hover.x + 14) : 0;
 
   return (
     <div className={cn("space-y-3", className)}>
-      <RegionSwitcher region={region} onChange={setRegion} />
+      <RegionSwitcher region={region} onChange={changeRegion} />
 
       <div
-        ref={containerRef}
         className="relative overflow-hidden rounded-lg"
         style={{ background: BG }}
       >

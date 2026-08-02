@@ -3,12 +3,17 @@ import Link from "next/link";
 
 import { SettingsNav } from "@/components/dashboard/settings-nav";
 import { Button } from "@/components/ui/button";
+import { canManageUsers } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 
-export default function SettingsLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const profile = await getCurrentProfile();
+  const isStaff = canManageUsers(profile?.role);
+
   return (
     <div className="space-y-8">
       <Button
@@ -32,7 +37,7 @@ export default function SettingsLayout({
               Manage your account.
             </p>
           </div>
-          <SettingsNav />
+          <SettingsNav isStaff={isStaff} />
         </aside>
 
         <div className="min-w-0">{children}</div>

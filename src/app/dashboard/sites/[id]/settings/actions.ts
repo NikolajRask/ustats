@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { normalizeDomain } from "@/lib/analytics/domain";
+import { canAccessSiteSettings } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 import { createClient } from "@/lib/supabase/server";
 
 export type SiteSettingsActionResult =
@@ -23,6 +25,17 @@ function revalidateSitePaths(siteId: string) {
   revalidatePath(`/dashboard/sites/${siteId}/settings`);
 }
 
+async function requireSiteSettingsAccess(): Promise<SiteSettingsActionResult | null> {
+  const profile = await getCurrentProfile();
+  if (!profile) {
+    return { ok: false, error: "Not signed in" };
+  }
+  if (!canAccessSiteSettings(profile.role)) {
+    return { ok: false, error: "Guests cannot change site settings" };
+  }
+  return null;
+}
+
 export async function updateSite(
   siteId: string,
   input: { name: string; domain: string },
@@ -30,6 +43,9 @@ export async function updateSite(
   if (!siteId) {
     return { ok: false, error: "Missing site" };
   }
+
+  const denied = await requireSiteSettingsAccess();
+  if (denied) return denied;
 
   const name = input.name.trim();
   const domain = normalizeDomain(input.domain);
@@ -59,6 +75,9 @@ export async function deleteSite(
   if (!siteId) {
     return { ok: false, error: "Missing site" };
   }
+
+  const denied = await requireSiteSettingsAccess();
+  if (denied) return denied;
 
   const supabase = await createClient();
   const { data: site, error: fetchError } = await supabase
@@ -98,6 +117,9 @@ export async function updateCrossDayTracking(
     return { ok: false, error: "Missing site" };
   }
 
+  const denied = await requireSiteSettingsAccess();
+  if (denied) return denied;
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("sites")
@@ -119,6 +141,9 @@ export async function updateDataRetention(
   if (!siteId) {
     return { ok: false, error: "Missing site" };
   }
+
+  const denied = await requireSiteSettingsAccess();
+  if (denied) return denied;
 
   if (
     days !== null &&

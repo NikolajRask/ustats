@@ -1,3 +1,7 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+import { InstanceDatabaseCard } from "@/components/dashboard/instance-database-card";
 import {
   Card,
   CardContent,
@@ -7,7 +11,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { headers } from "next/headers";
+import { isStaffRole } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
+import type { SupabasePlan } from "@/lib/supabase-plan";
+import { createClient } from "@/lib/supabase/server";
 
 function getAppUrl(headerHost: string | null) {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
@@ -17,11 +24,41 @@ function getAppUrl(headerHost: string | null) {
 }
 
 export default async function SettingsInstancePage() {
+  const profile = await getCurrentProfile();
+  if (!isStaffRole(profile?.role)) {
+    redirect("/dashboard/settings");
+  }
+
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
   const appUrl = getAppUrl(host);
   const scriptSrc = `${appUrl}/script.js`;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "—";
+
+  const supabase = await createClient();
+  const [{ data: usageBytes, error: usageError }, { data: settings }] =
+    await Promise.all([
+      supabase.rpc("get_database_usage"),
+      supabase
+        .from("instance_settings")
+        .select("supabase_plan")
+        .eq("id", true)
+        .maybeSingle(),
+    ]);
+
+  const usedBytes = (() => {
+    if (usageError || usageBytes == null) return null;
+    if (typeof usageBytes === "number" && Number.isFinite(usageBytes)) {
+      return usageBytes;
+    }
+    if (typeof usageBytes === "string") {
+      const n = Number(usageBytes);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  })();
+  const plan: SupabasePlan =
+    settings?.supabase_plan === "pro" ? "pro" : "free";
 
   return (
     <div className="space-y-6">
@@ -78,15 +115,11 @@ export default async function SettingsInstancePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="supabase-url">Supabase URL</Label>
-            <Input
-              id="supabase-url"
-              value={supabaseUrl}
-              readOnly
-              className="bg-muted/40 font-mono text-sm"
-            />
-          </div>
+          <InstanceDatabaseCard
+            supabaseUrl={supabaseUrl}
+            usedBytes={usedBytes}
+            initialPlan={plan}
+          />
         </CardContent>
       </Card>
     </div>

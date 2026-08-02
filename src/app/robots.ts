@@ -1,8 +1,20 @@
 import type { MetadataRoute } from "next";
 
+import { isMarketingMode } from "@/lib/app-mode";
 import { absoluteUrl } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
+  if (!isMarketingMode()) {
+    return {
+      rules: [
+        {
+          userAgent: "*",
+          disallow: "/",
+        },
+      ],
+    };
+  }
+
   return {
     rules: [
       {
@@ -15,6 +27,7 @@ export default function robots(): MetadataRoute.Robots {
           "/test",
           "/api/",
           "/auth/",
+          "/mode-gate",
         ],
       },
     ],

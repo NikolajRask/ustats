@@ -1,4 +1,5 @@
-import { signOut, updatePassword } from "@/app/actions";
+import { signOut } from "@/app/actions";
+import { PasswordChangeForm } from "@/components/dashboard/password-change-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default async function SettingsSecurityPage({
   searchParams,
@@ -39,44 +38,7 @@ export default async function SettingsSecurityPage({
         </p>
       ) : null}
 
-      <form action={updatePassword} className="space-y-6">
-        <Card className="bg-background/80">
-          <CardHeader>
-            <CardTitle>Password</CardTitle>
-            <CardDescription>
-              Choose a new password for your account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="password">New password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirm password</Label>
-              <Input
-                id="confirm"
-                name="confirm"
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button type="submit">Save changes</Button>
-        </div>
-      </form>
+      <PasswordChangeForm />
 
       <Card className="bg-background/80">
         <CardHeader>

@@ -7,6 +7,7 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
@@ -15,7 +16,6 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import {
   AI_ASSISTANT_CHANGE_EVENT,
-  AI_ASSISTANT_STORAGE_KEY,
   getAiAskBeforeFunnels,
   getAiAssistantEnabled,
 } from "@/lib/ai-assistant";
@@ -52,12 +52,26 @@ function siteIdFromPath(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
+function subscribeAiEnabled(onStoreChange: () => void) {
+  window.addEventListener(AI_ASSISTANT_CHANGE_EVENT, onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    window.removeEventListener(AI_ASSISTANT_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
+
 export function AiChat() {
   const panelId = useId();
   const pathname = usePathname();
   const siteId = siteIdFromPath(pathname);
-  const [enabled, setEnabled] = useState(false);
+  const enabled = useSyncExternalStore(
+    subscribeAiEnabled,
+    getAiAssistantEnabled,
+    () => false,
+  );
   const [open, setOpen] = useState(false);
+  const panelOpen = open && enabled;
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [pending, setPending] = useState(false);
@@ -70,54 +84,22 @@ export function AiChat() {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    setEnabled(getAiAssistantEnabled());
-
-    function onChange(event: Event) {
-      const detail = (event as CustomEvent<boolean>).detail;
-      if (typeof detail === "boolean") {
-        setEnabled(detail);
-        if (!detail) setOpen(false);
-        return;
-      }
-      const next = getAiAssistantEnabled();
-      setEnabled(next);
-      if (!next) setOpen(false);
-    }
-
-    function onStorage(event: StorageEvent) {
-      if (event.key !== null && event.key !== AI_ASSISTANT_STORAGE_KEY) {
-        return;
-      }
-      const next = getAiAssistantEnabled();
-      setEnabled(next);
-      if (!next) setOpen(false);
-    }
-
-    window.addEventListener(AI_ASSISTANT_CHANGE_EVENT, onChange);
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(AI_ASSISTANT_CHANGE_EVENT, onChange);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
-  useEffect(() => {
     return () => {
       abortRef.current?.abort();
     };
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!panelOpen) return;
     const frame = requestAnimationFrame(() => inputRef.current?.focus());
     return () => cancelAnimationFrame(frame);
-  }, [open]);
+  }, [panelOpen]);
 
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages, open, pending, error, pendingToolCalls]);
+  }, [messages, panelOpen, pending, error, pendingToolCalls]);
 
   async function requestChat(options: {
     history: { role: "user" | "assistant"; content: string }[];

@@ -7,21 +7,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { roleLabel } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsAccountPage() {
   const supabase = await createClient();
+  const profile = await getCurrentProfile();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const email = user?.email ?? "—";
-  const createdAt = user?.created_at
-    ? new Intl.DateTimeFormat("en", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }).format(new Date(user.created_at))
-    : null;
 
   return (
     <div className="space-y-6">
@@ -56,12 +52,12 @@ export default async function SettingsAccountPage() {
               Your email address cannot be changed here.
             </p>
           </div>
-          {createdAt ? (
+          {profile ? (
             <div className="space-y-2">
-              <Label htmlFor="created">Member since</Label>
+              <Label htmlFor="role">Role</Label>
               <Input
-                id="created"
-                value={createdAt}
+                id="role"
+                value={roleLabel(profile.role)}
                 readOnly
                 className="bg-muted/40"
               />

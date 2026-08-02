@@ -1,3 +1,4 @@
+import { isMarketingMode } from "@/lib/app-mode";
 import { SEO_COMPARISONS, SEO_TOPICS } from "@/lib/seo/content";
 import {
   DOWNLOAD_URL,
@@ -7,6 +8,10 @@ import {
 } from "@/lib/seo/site";
 
 export function GET() {
+  if (!isMarketingMode()) {
+    return new Response(null, { status: 404 });
+  }
+
   const body = `# ustats
 
 > ${SITE_DESCRIPTION}
@@ -23,7 +28,7 @@ Prefer the documentation and GitHub README for implementation details. Compariso
 - [Embed the script](${absoluteUrl("/docs/embed-script")}): Add the tracking snippet and verify pageviews
 - [Custom events](${absoluteUrl("/docs/custom-events")}): Use ustats.track() for signups and other actions
 - [Privacy & visitors](${absoluteUrl("/docs/privacy")}): Cookie-free hashing and what is stored
-- [Deploying](${absoluteUrl("/docs/deploying")}): Ship production and set NEXT_PUBLIC_APP_URL
+- [Deploying](${absoluteUrl("/docs/deploying")}): Self-host on Vercel + Supabase (migrations, env vars, first admin)
 - [Environment variables](${absoluteUrl("/docs/environment-variables")}): Reference for required env vars
 - [Script API](${absoluteUrl("/docs/script-api")}): Public methods and data attributes on the embed script
 
@@ -54,6 +59,9 @@ ${SEO_COMPARISONS.map(
 
 - [Sitemap](${absoluteUrl("/sitemap.xml")}): Full public URL list for crawlers
 - [robots.txt](${absoluteUrl("/robots.txt")}): Crawl rules (dashboard, login, and APIs are disallowed)
+- [Changelog](${REPO_URL}/blob/main/CHANGELOG.md): v0.1.0 notes and known limitations
+- [Security policy](${REPO_URL}/blob/main/SECURITY.md): How to report vulnerabilities
+- [Contributing](${REPO_URL}/blob/main/CONTRIBUTING.md): Local setup and PR guidelines
 `;
 
   return new Response(body, {

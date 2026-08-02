@@ -6,6 +6,7 @@ import { signInWithPassword, signUpWithPassword } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isSignupDisabled } from "@/lib/auth-config";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default async function LoginPage({
   }
 
   const params = await searchParams;
+  const signupDisabled = isSignupDisabled();
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-12">
@@ -44,8 +46,9 @@ export default async function LoginPage({
         Sign in to your instance
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Uses Supabase Auth on your project. Create an account if this is a fresh
-        install.
+        {signupDisabled
+          ? "Sign in with an existing account."
+          : "Uses Supabase Auth on your project. Create an account if this is a fresh install."}
       </p>
 
       {params.error ? (
@@ -72,14 +75,16 @@ export default async function LoginPage({
         <Button type="submit" className="w-full" formAction={signInWithPassword}>
           Log in
         </Button>
-        <Button
-          type="submit"
-          variant="outline"
-          className="w-full"
-          formAction={signUpWithPassword}
-        >
-          Create account
-        </Button>
+        {signupDisabled ? null : (
+          <Button
+            type="submit"
+            variant="outline"
+            className="w-full"
+            formAction={signUpWithPassword}
+          >
+            Create account
+          </Button>
+        )}
       </form>
     </div>
   );

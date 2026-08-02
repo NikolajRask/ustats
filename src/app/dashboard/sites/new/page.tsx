@@ -1,15 +1,23 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { createSite } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { canManageSites } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 
 export default async function NewSitePage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const profile = await getCurrentProfile();
+  if (!canManageSites(profile?.role)) {
+    redirect("/dashboard");
+  }
+
   const params = await searchParams;
 
   return (

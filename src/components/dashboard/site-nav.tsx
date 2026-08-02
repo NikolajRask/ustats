@@ -29,7 +29,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Settings", segment: "settings" },
 ];
 
-export function SiteNav({ siteId }: { siteId: string }) {
+export function SiteNav({
+  siteId,
+  showSettings = true,
+}: {
+  siteId: string;
+  showSettings?: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const range = searchParams.get("range");
@@ -44,7 +50,8 @@ export function SiteNav({ siteId }: { siteId: string }) {
       <ul className="flex min-w-max gap-1 border-b border-border/70">
         {NAV_ITEMS.filter(
           (item) =>
-            !item.experimental || experimentalFeatures[item.experimental],
+            (item.segment !== "settings" || showSettings) &&
+            (!item.experimental || experimentalFeatures[item.experimental]),
         ).map((item) => {
           const hrefPath = item.segment ? `${base}/${item.segment}` : base;
           const active =

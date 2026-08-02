@@ -318,7 +318,7 @@ export function ErrorsTable({
           </h3>
           <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
             {filtered.length.toLocaleString()}
-            {isFiltered || statusFilter !== ALL_STATUSES
+            {filtered.length !== groups.length
               ? ` / ${groups.length.toLocaleString()}`
               : ""}{" "}
             {filtered.length === 1 ? "issue" : "issues"}

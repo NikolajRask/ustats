@@ -27,10 +27,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { canManageSites } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsSitesPage() {
   const supabase = await createClient();
+  const profile = await getCurrentProfile();
+  const canCreate = canManageSites(profile?.role);
+
   const { data: sites } = await supabase
     .from("sites")
     .select("id, name, domain, public_key, created_at")
@@ -49,14 +54,16 @@ export default async function SettingsSitesPage() {
             Properties tracked by this ustats instance.
           </p>
         </div>
-        <Button
-          nativeButton={false}
-          size="sm"
-          render={<Link href="/dashboard/sites/new" />}
-        >
-          <PlusIcon data-icon="inline-start" />
-          Add site
-        </Button>
+        {canCreate ? (
+          <Button
+            nativeButton={false}
+            size="sm"
+            render={<Link href="/dashboard/sites/new" />}
+          >
+            <PlusIcon data-icon="inline-start" />
+            Add site
+          </Button>
+        ) : null}
       </div>
 
       <Card className="bg-background/80">
@@ -82,18 +89,22 @@ export default async function SettingsSitesPage() {
                   No sites yet
                 </EmptyTitle>
                 <EmptyDescription>
-                  Add a domain to start collecting pageviews.
+                  {canCreate
+                    ? "Add a domain to start collecting pageviews."
+                    : "An admin has not assigned any sites to your account yet."}
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
-                <Button
-                  nativeButton={false}
-                  render={<Link href="/dashboard/sites/new" />}
-                >
-                  <PlusIcon data-icon="inline-start" />
-                  Add your first site
-                </Button>
-              </EmptyContent>
+              {canCreate ? (
+                <EmptyContent>
+                  <Button
+                    nativeButton={false}
+                    render={<Link href="/dashboard/sites/new" />}
+                  >
+                    <PlusIcon data-icon="inline-start" />
+                    Add your first site
+                  </Button>
+                </EmptyContent>
+              ) : null}
             </Empty>
           ) : (
             <div className="overflow-hidden rounded-xl border">

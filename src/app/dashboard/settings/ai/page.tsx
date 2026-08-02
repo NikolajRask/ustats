@@ -1,6 +1,15 @@
-import { AiAssistantSettings } from "@/components/dashboard/ai-assistant-settings";
+import { redirect } from "next/navigation";
 
-export default function SettingsAiAssistantPage() {
+import { AiAssistantSettings } from "@/components/dashboard/ai-assistant-settings";
+import { isStaffRole } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
+
+export default async function SettingsAiAssistantPage() {
+  const profile = await getCurrentProfile();
+  if (!isStaffRole(profile?.role)) {
+    redirect("/dashboard/settings");
+  }
+
   const hasApiKey = Boolean(process.env.OPENAI_API_KEY?.trim());
 
   return (

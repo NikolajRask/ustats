@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,79 +14,45 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   AI_ASK_BEFORE_FUNNELS_CHANGE_EVENT,
-  AI_ASK_BEFORE_FUNNELS_KEY,
   AI_ASSISTANT_CHANGE_EVENT,
-  AI_ASSISTANT_STORAGE_KEY,
   getAiAskBeforeFunnels,
   getAiAssistantEnabled,
   setAiAskBeforeFunnels,
   setAiAssistantEnabled,
 } from "@/lib/ai-assistant";
 
+function subscribeAiPrefs(onStoreChange: () => void) {
+  window.addEventListener(AI_ASSISTANT_CHANGE_EVENT, onStoreChange);
+  window.addEventListener(AI_ASK_BEFORE_FUNNELS_CHANGE_EVENT, onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    window.removeEventListener(AI_ASSISTANT_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener(AI_ASK_BEFORE_FUNNELS_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
+
 export function AiAssistantSettings({
   hasApiKey,
 }: {
   hasApiKey: boolean;
 }) {
-  const [enabled, setEnabled] = useState(false);
-  const [askBeforeFunnels, setAskBeforeFunnels] = useState(true);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setEnabled(getAiAssistantEnabled());
-    setAskBeforeFunnels(getAiAskBeforeFunnels());
-    setReady(true);
-
-    function onEnabledChange(event: Event) {
-      const detail = (event as CustomEvent<boolean>).detail;
-      if (typeof detail === "boolean") {
-        setEnabled(detail);
-        return;
-      }
-      setEnabled(getAiAssistantEnabled());
-    }
-
-    function onAskChange(event: Event) {
-      const detail = (event as CustomEvent<boolean>).detail;
-      if (typeof detail === "boolean") {
-        setAskBeforeFunnels(detail);
-        return;
-      }
-      setAskBeforeFunnels(getAiAskBeforeFunnels());
-    }
-
-    function onStorage(event: StorageEvent) {
-      if (
-        event.key !== null &&
-        event.key !== AI_ASSISTANT_STORAGE_KEY &&
-        event.key !== AI_ASK_BEFORE_FUNNELS_KEY
-      ) {
-        return;
-      }
-      setEnabled(getAiAssistantEnabled());
-      setAskBeforeFunnels(getAiAskBeforeFunnels());
-    }
-
-    window.addEventListener(AI_ASSISTANT_CHANGE_EVENT, onEnabledChange);
-    window.addEventListener(AI_ASK_BEFORE_FUNNELS_CHANGE_EVENT, onAskChange);
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener(AI_ASSISTANT_CHANGE_EVENT, onEnabledChange);
-      window.removeEventListener(
-        AI_ASK_BEFORE_FUNNELS_CHANGE_EVENT,
-        onAskChange,
-      );
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+  const enabled = useSyncExternalStore(
+    subscribeAiPrefs,
+    getAiAssistantEnabled,
+    () => false,
+  );
+  const askBeforeFunnels = useSyncExternalStore(
+    subscribeAiPrefs,
+    getAiAskBeforeFunnels,
+    () => true,
+  );
 
   function onToggle(next: boolean) {
-    setEnabled(next);
     setAiAssistantEnabled(next);
   }
 
   function onAskToggle(next: boolean) {
-    setAskBeforeFunnels(next);
     setAiAskBeforeFunnels(next);
   }
 
@@ -111,7 +77,6 @@ export function AiAssistantSettings({
             <Switch
               id="ai-assistant-enabled"
               checked={enabled}
-              disabled={!ready}
               onCheckedChange={onToggle}
               aria-label="Enable AI assistant"
             />
@@ -143,7 +108,6 @@ export function AiAssistantSettings({
                 <Switch
                   id="ai-ask-before-funnels"
                   checked={askBeforeFunnels}
-                  disabled={!ready}
                   onCheckedChange={onAskToggle}
                   aria-label="Ask before creating funnels"
                 />

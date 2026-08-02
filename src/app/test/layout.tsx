@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -12,6 +13,11 @@ export default async function TestLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Dev-only playground — never expose site keys via service role in production.
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     "http://localhost:3000";

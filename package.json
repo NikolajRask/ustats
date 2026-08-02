@@ -3,6 +3,26 @@
   "version": "0.1.0",
   "private": false,
   "license": "MIT",
+  "description": "Self-hosted, privacy-friendly web analytics on your Supabase project",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NikolajRask/ustats.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NikolajRask/ustats/issues"
+  },
+  "homepage": "https://github.com/NikolajRask/ustats#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "analytics",
+    "supabase",
+    "self-hosted",
+    "privacy",
+    "plausible",
+    "nextjs"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

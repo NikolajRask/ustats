@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { LandingChart } from "@/components/landing-chart";
 import { PricingCalculator } from "@/components/pricing-calculator";
+import { isMarketingMode } from "@/lib/app-mode";
 import {
   DOWNLOAD_URL,
   REPO_URL,
@@ -16,14 +18,24 @@ import {
   SPONSOR_CTA_HREF,
   sponsors,
 } from "@/lib/sponsors";
+import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = {
-  title: {
-    absolute: `${SITE_NAME} · ${SITE_TAGLINE}`,
-  },
-  description: SITE_DESCRIPTION,
-  alternates: { canonical: absoluteUrl("/") },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  if (!isMarketingMode()) {
+    return {
+      title: SITE_NAME,
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: {
+      absolute: `${SITE_NAME} · ${SITE_TAGLINE}`,
+    },
+    description: SITE_DESCRIPTION,
+    alternates: { canonical: absoluteUrl("/") },
+  };
+}
 
 const capabilities = [
   "Pageviews & uniques",
@@ -89,7 +101,15 @@ const faqs = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  if (!isMarketingMode()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    redirect(user ? "/dashboard" : "/login");
+  }
+
   const softwareJsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",

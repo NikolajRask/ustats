@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { SiteNav } from "@/components/dashboard/site-nav";
 import { SiteRangeControls } from "@/components/dashboard/site-range-controls";
 import { Button } from "@/components/ui/button";
+import { canAccessSiteSettings } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 import { getSiteOrNotFound } from "@/lib/site";
 
 export default async function SiteLayout({
@@ -15,6 +17,8 @@ export default async function SiteLayout({
 }) {
   const { id } = await params;
   const site = await getSiteOrNotFound(id);
+  const profile = await getCurrentProfile();
+  const showSettings = canAccessSiteSettings(profile?.role);
 
   return (
     <div className="space-y-6">
@@ -52,7 +56,7 @@ export default async function SiteLayout({
           <div className="h-10 border-b border-border/70" />
         }
       >
-        <SiteNav siteId={site.id} />
+        <SiteNav siteId={site.id} showSettings={showSettings} />
       </Suspense>
 
       {children}

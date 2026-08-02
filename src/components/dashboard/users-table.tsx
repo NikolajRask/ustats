@@ -97,14 +97,11 @@ function UserAvatar({
 }
 
 function JourneyTimeline({ journey }: { journey: UserJourneyEvent[] }) {
-  let lastSession: string | null = null;
-
   return (
     <ol className="relative space-y-0 border-l border-border/70 pl-4">
-      {journey.map((step) => {
+      {journey.map((step, index) => {
         const sessionBreak =
-          lastSession !== null && lastSession !== step.session_hash;
-        lastSession = step.session_hash;
+          index > 0 && journey[index - 1]!.session_hash !== step.session_hash;
         const isPageview = step.name === "pageview";
 
         return (

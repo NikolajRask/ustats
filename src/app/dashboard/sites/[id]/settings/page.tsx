@@ -1,7 +1,11 @@
+import { redirect } from "next/navigation";
+
 import { SiteDangerZone } from "@/components/dashboard/site-danger-zone";
 import { SiteDataRetentionSettings } from "@/components/dashboard/site-data-retention-settings";
 import { SiteGeneralSettings } from "@/components/dashboard/site-general-settings";
 import { SitePrivacySettings } from "@/components/dashboard/site-privacy-settings";
+import { canAccessSiteSettings } from "@/lib/roles";
+import { getCurrentProfile } from "@/lib/roles.server";
 import { getSiteOrNotFound } from "@/lib/site";
 
 export default async function SiteSettingsPage({
@@ -10,6 +14,11 @@ export default async function SiteSettingsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const profile = await getCurrentProfile();
+  if (!canAccessSiteSettings(profile?.role)) {
+    redirect(`/dashboard/sites/${id}`);
+  }
+
   const site = await getSiteOrNotFound(id);
 
   return (

@@ -73,7 +73,9 @@ export default function DocsIntroductionPage() {
       <p>
         Start with{" "}
         <Link href="/docs/installation">Installation</Link> to link Supabase and
-        run the app locally, then{" "}
+        run the app locally,{" "}
+        <Link href="/docs/deploying">deploy on Vercel and Supabase</Link> for
+        production, then{" "}
         <Link href="/docs/embed-script">embed the script</Link> on a site.
       </p>
     </DocsArticle>
