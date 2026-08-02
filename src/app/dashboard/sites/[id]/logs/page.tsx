@@ -1,7 +1,7 @@
 import { LogsTable } from "@/components/dashboard/logs-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSiteOrNotFound, parseDateRange } from "@/lib/site";
-import { getSiteLogs } from "@/lib/stats";
+import { getSiteLogs, LOGS_PAGE_SIZE } from "@/lib/stats";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LogsPage({
@@ -16,7 +16,8 @@ export default async function LogsPage({
   const { range } = parseDateRange(sp.range);
   const site = await getSiteOrNotFound(id);
   const supabase = await createClient();
-  const logs = await getSiteLogs(supabase, site.id, range, 250);
+  const logs = await getSiteLogs(supabase, site.id, range, LOGS_PAGE_SIZE);
+  const hasMore = logs.length === LOGS_PAGE_SIZE;
 
   return (
     <div className="space-y-8">
@@ -41,7 +42,14 @@ export default async function LogsPage({
               </p>
             </div>
           ) : (
-            <LogsTable logs={logs} />
+            <LogsTable
+              key={`${site.id}-${range.from}-${range.to}`}
+              logs={logs}
+              siteId={site.id}
+              range={range}
+              pageSize={LOGS_PAGE_SIZE}
+              hasMore={hasMore}
+            />
           )}
         </CardContent>
       </Card>

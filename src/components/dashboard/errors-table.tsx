@@ -3,6 +3,7 @@
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useDeferredValue, useMemo, useState, useTransition } from "react";
 
+import { loadMoreErrorGroups } from "@/app/dashboard/sites/[id]/errors/actions";
 import { DatePickerField } from "@/components/dashboard/date-picker-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import type {
   ErrorGroupStatus,
   ErrorOccurrenceRow,
 } from "@/lib/errors";
+import type { DateRange } from "@/lib/stats";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -148,11 +150,21 @@ function matchesSearch(row: ErrorGroupRow, query: string) {
 
 export function ErrorsTable({
   siteId,
+  range,
   groups: initialGroups,
+  pageSize,
+  hasMore: initialHasMore,
 }: {
   siteId: string;
+  range: DateRange;
   groups: ErrorGroupRow[];
+  pageSize: number;
+  hasMore: boolean;
 }) {
+  const [loadedGroups, setLoadedGroups] = useState(initialGroups);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoadingMore, startLoadMore] = useTransition();
   const [statusOverrides, setStatusOverrides] = useState<
     Record<string, ErrorGroupStatus>
   >({});
@@ -170,12 +182,30 @@ export function ErrorsTable({
 
   const groups = useMemo(
     () =>
-      initialGroups.map((group) => ({
+      loadedGroups.map((group) => ({
         ...group,
         status: statusOverrides[group.id] ?? group.status,
       })),
-    [initialGroups, statusOverrides],
+    [loadedGroups, statusOverrides],
   );
+
+  function handleLoadMore() {
+    setLoadError(null);
+    startLoadMore(async () => {
+      const result = await loadMoreErrorGroups(
+        siteId,
+        range,
+        loadedGroups.length,
+        pageSize,
+      );
+      if (!result.ok) {
+        setLoadError(result.error);
+        return;
+      }
+      setLoadedGroups((prev) => [...prev, ...result.groups]);
+      setHasMore(result.hasMore);
+    });
+  }
 
   const statusCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -507,6 +537,23 @@ export function ErrorsTable({
           </TableBody>
         </Table>
       )}
+
+      {hasMore ? (
+        <div className="flex flex-col items-center gap-2 border-t border-border/60 px-4 py-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLoadingMore}
+            onClick={handleLoadMore}
+          >
+            {isLoadingMore ? "Loading…" : "Load more"}
+          </Button>
+          {loadError ? (
+            <p className="text-center text-xs text-destructive">{loadError}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <Sheet
         open={selected != null}

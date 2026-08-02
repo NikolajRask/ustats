@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState, useTransition } from "react";
 
+import { loadMoreSiteLogs } from "@/app/dashboard/sites/[id]/logs/actions";
 import { DatePickerField } from "@/components/dashboard/date-picker-field";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { EventLogRow } from "@/lib/stats";
+import type { DateRange, EventLogRow } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 
 const ALL_EVENTS = "__all__";
@@ -147,13 +148,42 @@ function endOfLocalDay(date: Date) {
   ).getTime();
 }
 
-export function LogsTable({ logs }: { logs: EventLogRow[] }) {
+export function LogsTable({
+  logs: initialLogs,
+  siteId,
+  range,
+  pageSize,
+  hasMore: initialHasMore,
+}: {
+  logs: EventLogRow[];
+  siteId: string;
+  range: DateRange;
+  pageSize: number;
+  hasMore: boolean;
+}) {
+  const [logs, setLogs] = useState(initialLogs);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<EventLogRow | null>(null);
   const [query, setQuery] = useState("");
   const [eventName, setEventName] = useState(ALL_EVENTS);
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const deferredQuery = useDeferredValue(query);
+
+  function handleLoadMore() {
+    setLoadError(null);
+    startTransition(async () => {
+      const result = await loadMoreSiteLogs(siteId, range, logs.length, pageSize);
+      if (!result.ok) {
+        setLoadError(result.error);
+        return;
+      }
+      setLogs((prev) => [...prev, ...result.logs]);
+      setHasMore(result.hasMore);
+    });
+  }
 
   const eventCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -369,6 +399,23 @@ export function LogsTable({ logs }: { logs: EventLogRow[] }) {
           </TableBody>
         </Table>
       )}
+
+      {hasMore ? (
+        <div className="flex flex-col items-center gap-2 border-t border-border/60 px-4 py-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={handleLoadMore}
+          >
+            {isPending ? "Loading…" : "Load more"}
+          </Button>
+          {loadError ? (
+            <p className="text-center text-xs text-destructive">{loadError}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <Sheet
         open={selected != null}

@@ -572,6 +572,14 @@ export type Database = {
         };
         Returns: number;
       };
+      get_site_stats: {
+        Args: {
+          p_site_id: string;
+          p_from: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getErrorStats } from "@/lib/errors";
+import { ERRORS_PAGE_SIZE, getErrorStats } from "@/lib/errors";
 import { getSiteOrNotFound, parseDateRange } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,6 +26,7 @@ export default async function ErrorsPage({
   const supabase = await createClient();
   const stats = await getErrorStats(supabase, site.id, range, {
     status: "all",
+    limit: ERRORS_PAGE_SIZE,
   });
 
   return (
@@ -129,7 +130,14 @@ export default async function ErrorsPage({
               </p>
             </div>
           ) : (
-            <ErrorsTable siteId={site.id} groups={stats.groups} />
+            <ErrorsTable
+              key={`${site.id}-${range.from}-${range.to}`}
+              siteId={site.id}
+              range={range}
+              groups={stats.groups}
+              pageSize={ERRORS_PAGE_SIZE}
+              hasMore={stats.hasMore}
+            />
           )}
         </CardContent>
       </Card>

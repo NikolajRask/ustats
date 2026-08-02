@@ -60,7 +60,10 @@ export type ErrorStats = {
   affectedUserPercent: number | null;
   timeseries: ErrorTimeseriesPoint[];
   groups: ErrorGroupRow[];
+  hasMore: boolean;
 };
+
+export const ERRORS_PAGE_SIZE = 50;
 
 function dayKey(iso: string): string {
   return iso.slice(0, 10);
@@ -90,10 +93,15 @@ export async function getErrorStats(
   supabase: SupabaseClient<Database>,
   siteId: string,
   range: DateRange,
-  options?: { status?: ErrorGroupStatus | "all"; limit?: number },
+  options?: {
+    status?: ErrorGroupStatus | "all";
+    limit?: number;
+    offset?: number;
+  },
 ): Promise<ErrorStats> {
   const status = options?.status ?? "unresolved";
-  const limit = options?.limit ?? 100;
+  const limit = options?.limit ?? ERRORS_PAGE_SIZE;
+  const offset = options?.offset ?? 0;
 
   const eventsQuery = fetchAllRows(
     (from, to) =>
@@ -223,7 +231,8 @@ export async function getErrorStats(
     affectedVisitors,
     affectedUserPercent,
     timeseries,
-    groups: enriched.slice(0, limit),
+    groups: enriched.slice(offset, offset + limit),
+    hasMore: enriched.length > offset + limit,
   };
 }
 

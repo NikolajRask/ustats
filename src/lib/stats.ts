@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { fetchAllRows } from "@/lib/supabase/fetch-all";
-import type { Database } from "@/lib/supabase/database.types";
+import type { Database, Json } from "@/lib/supabase/database.types";
 
 export type DateRange = {
   from: string;
@@ -101,62 +100,103 @@ export function rangeFromDays(days: number): DateRange {
   };
 }
 
-function countUnique(values: (string | null | undefined)[]): number {
-  return new Set(values.filter(Boolean)).size;
+function asNumber(value: unknown, fallback = 0): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-function breakdown(
-  rows: { key: string | null | undefined; visitor: string }[],
-  limit = 10,
-): BreakdownRow[] {
-  const map = new Map<string, { count: number; visitors: Set<string> }>();
-
-  for (const row of rows) {
-    const key = row.key?.trim() || "(none)";
-    const entry = map.get(key) ?? { count: 0, visitors: new Set<string>() };
-    entry.count += 1;
-    entry.visitors.add(row.visitor);
-    map.set(key, entry);
-  }
-
-  return [...map.entries()]
-    .map(([key, value]) => ({
-      key,
-      count: value.count,
-      visitors: value.visitors.size,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, limit);
+function asNullableNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function breakdownByCountry(
-  rows: {
-    country: string | null | undefined;
-    key: string | null | undefined;
-    visitor: string;
-  }[],
-  limit = 50,
-): Record<string, BreakdownRow[]> {
-  const byCountry = new Map<
-    string,
-    { key: string | null | undefined; visitor: string }[]
-  >();
+function asBreakdownRows(value: unknown): BreakdownRow[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const record = row as Record<string, unknown>;
+      const key = typeof record.key === "string" ? record.key : null;
+      if (!key) return null;
+      return {
+        key,
+        count: asNumber(record.count),
+        visitors: asNumber(record.visitors),
+      };
+    })
+    .filter((row): row is BreakdownRow => row !== null);
+}
 
-  for (const row of rows) {
-    const country = row.country?.trim().toUpperCase();
-    if (!country) continue;
-    const list = byCountry.get(country) ?? [];
-    list.push({ key: row.key, visitor: row.visitor });
-    byCountry.set(country, list);
-  }
-
+function asBreakdownByCountry(value: unknown): Record<string, BreakdownRow[]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: Record<string, BreakdownRow[]> = {};
-  for (const [country, items] of byCountry) {
-    result[country] = breakdown(items, limit).filter(
-      (row) => row.key !== "(none)",
-    );
+  for (const [country, rows] of Object.entries(value)) {
+    result[country] = asBreakdownRows(rows);
   }
   return result;
+}
+
+function asTimeseries(value: unknown): TimeseriesPoint[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((row) => {
+      if (!row || typeof row !== "object") return null;
+      const record = row as Record<string, unknown>;
+      const day = typeof record.day === "string" ? record.day : null;
+      if (!day) return null;
+      return {
+        day,
+        pageviews: asNumber(record.pageviews),
+        visitors: asNumber(record.visitors),
+        events: asNumber(record.events),
+        bounceRate: asNullableNumber(record.bounceRate),
+        avgSessionSeconds: asNullableNumber(record.avgSessionSeconds),
+      };
+    })
+    .filter((row): row is TimeseriesPoint => row !== null);
+}
+
+function asDayNameCounts(value: unknown): Record<string, Record<string, number>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: Record<string, Record<string, number>> = {};
+  for (const [day, names] of Object.entries(value)) {
+    if (!names || typeof names !== "object" || Array.isArray(names)) continue;
+    const dayCounts: Record<string, number> = {};
+    for (const [name, count] of Object.entries(names)) {
+      dayCounts[name] = asNumber(count);
+    }
+    result[day] = dayCounts;
+  }
+  return result;
+}
+
+function parseSiteStats(data: Json): SiteStats {
+  const record =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+
+  return {
+    pageviews: asNumber(record.pageviews),
+    visitors: asNumber(record.visitors),
+    events: asNumber(record.events),
+    eventVisitors: asNumber(record.eventVisitors),
+    bounceRate: asNullableNumber(record.bounceRate),
+    avgSessionSeconds: asNullableNumber(record.avgSessionSeconds),
+    timeseries: asTimeseries(record.timeseries),
+    eventTimeseries: asTimeseries(record.eventTimeseries),
+    customEventCountsByDay: asDayNameCounts(record.customEventCountsByDay),
+    customEventVisitorsByDay: asDayNameCounts(record.customEventVisitorsByDay),
+    topPages: asBreakdownRows(record.topPages),
+    topReferrers: asBreakdownRows(record.topReferrers),
+    topCountries: asBreakdownRows(record.topCountries),
+    regionsByCountry: asBreakdownByCountry(record.regionsByCountry),
+    citiesByCountry: asBreakdownByCountry(record.citiesByCountry),
+    topDevices: asBreakdownRows(record.topDevices),
+    topBrowsers: asBreakdownRows(record.topBrowsers),
+    topSources: asBreakdownRows(record.topSources),
+    topMediums: asBreakdownRows(record.topMediums),
+    topCampaigns: asBreakdownRows(record.topCampaigns),
+    customEvents: asBreakdownRows(record.customEvents),
+  };
 }
 
 export async function getSiteStats(
@@ -164,237 +204,17 @@ export async function getSiteStats(
   siteId: string,
   range: DateRange,
 ): Promise<SiteStats> {
-  const events = await fetchAllRows((from, to) =>
-    supabase
-      .from("events")
-      .select(
-        "name, path, referrer_host, country, region, city, device, browser, utm_source, utm_medium, utm_campaign, visitor_hash, session_hash, created_at",
-      )
-      .eq("site_id", siteId)
-      .gte("created_at", range.from)
-      .lte("created_at", range.to)
-      .order("id", { ascending: true })
-      .range(from, to),
-  );
-  const pageviews = events.filter((e) => e.name === "pageview");
-  const custom = events.filter((e) => e.name !== "pageview");
+  const { data, error } = await supabase.rpc("get_site_stats", {
+    p_site_id: siteId,
+    p_from: range.from,
+    p_to: range.to,
+  });
 
-  type SessionAgg = {
-    count: number;
-    first: number;
-    last: number;
-    day: string;
-  };
-  const sessionsByHash = new Map<string, SessionAgg>();
-  for (const event of pageviews) {
-    const t = new Date(event.created_at).getTime();
-    const existing = sessionsByHash.get(event.session_hash);
-    if (!existing) {
-      sessionsByHash.set(event.session_hash, {
-        count: 1,
-        first: t,
-        last: t,
-        day: event.created_at.slice(0, 10),
-      });
-      continue;
-    }
-    existing.count += 1;
-    if (t < existing.first) {
-      existing.first = t;
-      existing.day = event.created_at.slice(0, 10);
-    }
-    if (t > existing.last) existing.last = t;
+  if (error) {
+    throw error;
   }
 
-  const sessions = sessionsByHash.size;
-  const bounces = [...sessionsByHash.values()].filter((s) => s.count === 1).length;
-  const sessionDurations = [...sessionsByHash.values()].map(
-    (s) => (s.last - s.first) / 1000,
-  );
-  const avgSessionSeconds = sessions
-    ? Math.round(
-        sessionDurations.reduce((sum, d) => sum + d, 0) / sessions,
-      )
-    : null;
-
-  const dayMap = new Map<
-    string,
-    { pageviews: number; visitors: Set<string>; events: number }
-  >();
-  for (const event of pageviews) {
-    const day = event.created_at.slice(0, 10);
-    const entry = dayMap.get(day) ?? {
-      pageviews: 0,
-      visitors: new Set<string>(),
-      events: 0,
-    };
-    entry.pageviews += 1;
-    entry.visitors.add(event.visitor_hash);
-    dayMap.set(day, entry);
-  }
-  for (const event of custom) {
-    const day = event.created_at.slice(0, 10);
-    const entry = dayMap.get(day) ?? {
-      pageviews: 0,
-      visitors: new Set<string>(),
-      events: 0,
-    };
-    entry.events += 1;
-    dayMap.set(day, entry);
-  }
-
-  const daySessions = new Map<
-    string,
-    { total: number; bounces: number; durationSum: number }
-  >();
-  for (const session of sessionsByHash.values()) {
-    const entry = daySessions.get(session.day) ?? {
-      total: 0,
-      bounces: 0,
-      durationSum: 0,
-    };
-    entry.total += 1;
-    if (session.count === 1) entry.bounces += 1;
-    entry.durationSum += (session.last - session.first) / 1000;
-    daySessions.set(session.day, entry);
-  }
-
-  const eventDayMap = new Map<
-    string,
-    { pageviews: number; visitors: Set<string> }
-  >();
-  const customEventCountsByDay: Record<string, Record<string, number>> = {};
-  const customEventVisitorSetsByDay: Record<
-    string,
-    Record<string, Set<string>>
-  > = {};
-  for (const event of custom) {
-    const day = event.created_at.slice(0, 10);
-    const entry = eventDayMap.get(day) ?? {
-      pageviews: 0,
-      visitors: new Set<string>(),
-    };
-    entry.pageviews += 1;
-    entry.visitors.add(event.visitor_hash);
-    eventDayMap.set(day, entry);
-
-    const dayCounts = customEventCountsByDay[day] ?? {};
-    dayCounts[event.name] = (dayCounts[event.name] ?? 0) + 1;
-    customEventCountsByDay[day] = dayCounts;
-
-    const dayVisitorSets = customEventVisitorSetsByDay[day] ?? {};
-    const visitors = dayVisitorSets[event.name] ?? new Set<string>();
-    visitors.add(event.visitor_hash);
-    dayVisitorSets[event.name] = visitors;
-    customEventVisitorSetsByDay[day] = dayVisitorSets;
-  }
-
-  const customEventVisitorsByDay: Record<string, Record<string, number>> = {};
-  for (const [day, byName] of Object.entries(customEventVisitorSetsByDay)) {
-    const dayVisitors: Record<string, number> = {};
-    for (const [name, visitors] of Object.entries(byName)) {
-      dayVisitors[name] = visitors.size;
-    }
-    customEventVisitorsByDay[day] = dayVisitors;
-  }
-
-  const timeseries: TimeseriesPoint[] = [];
-  const eventTimeseries: TimeseriesPoint[] = [];
-  const cursor = new Date(range.from);
-  cursor.setUTCHours(0, 0, 0, 0);
-  const end = new Date(range.to);
-  end.setUTCHours(0, 0, 0, 0);
-  while (cursor <= end) {
-    const day = cursor.toISOString().slice(0, 10);
-    const value = dayMap.get(day);
-    const sessionDay = daySessions.get(day);
-    timeseries.push({
-      day,
-      pageviews: value?.pageviews ?? 0,
-      visitors: value?.visitors.size ?? 0,
-      events: value?.events ?? 0,
-      bounceRate: sessionDay
-        ? Math.round((sessionDay.bounces / sessionDay.total) * 100)
-        : null,
-      avgSessionSeconds: sessionDay
-        ? Math.round(sessionDay.durationSum / sessionDay.total)
-        : null,
-    });
-    const eventValue = eventDayMap.get(day);
-    eventTimeseries.push({
-      day,
-      pageviews: eventValue?.pageviews ?? 0,
-      visitors: eventValue?.visitors.size ?? 0,
-      events: eventValue?.pageviews ?? 0,
-      bounceRate: null,
-      avgSessionSeconds: null,
-    });
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-
-  return {
-    pageviews: pageviews.length,
-    visitors: countUnique(pageviews.map((e) => e.visitor_hash)),
-    events: custom.length,
-    eventVisitors: countUnique(custom.map((e) => e.visitor_hash)),
-    bounceRate: sessions ? Math.round((bounces / sessions) * 100) : null,
-    avgSessionSeconds,
-    timeseries,
-    eventTimeseries,
-    customEventCountsByDay,
-    customEventVisitorsByDay,
-    topPages: breakdown(
-      pageviews.map((e) => ({ key: e.path, visitor: e.visitor_hash })),
-    ),
-    topReferrers: breakdown(
-      pageviews
-        .filter((e) => e.referrer_host)
-        .map((e) => ({ key: e.referrer_host, visitor: e.visitor_hash })),
-    ),
-    topCountries: breakdown(
-      pageviews.map((e) => ({ key: e.country, visitor: e.visitor_hash })),
-      25,
-    ),
-    regionsByCountry: breakdownByCountry(
-      pageviews.map((e) => ({
-        country: e.country,
-        key: e.region,
-        visitor: e.visitor_hash,
-      })),
-    ),
-    citiesByCountry: breakdownByCountry(
-      pageviews.map((e) => ({
-        country: e.country,
-        key: e.city,
-        visitor: e.visitor_hash,
-      })),
-    ),
-    topDevices: breakdown(
-      pageviews.map((e) => ({ key: e.device, visitor: e.visitor_hash })),
-    ),
-    topBrowsers: breakdown(
-      pageviews.map((e) => ({ key: e.browser, visitor: e.visitor_hash })),
-    ),
-    topSources: breakdown(
-      pageviews
-        .filter((e) => e.utm_source)
-        .map((e) => ({ key: e.utm_source, visitor: e.visitor_hash })),
-    ),
-    topMediums: breakdown(
-      pageviews
-        .filter((e) => e.utm_medium)
-        .map((e) => ({ key: e.utm_medium, visitor: e.visitor_hash })),
-    ),
-    topCampaigns: breakdown(
-      pageviews
-        .filter((e) => e.utm_campaign)
-        .map((e) => ({ key: e.utm_campaign, visitor: e.visitor_hash })),
-    ),
-    customEvents: breakdown(
-      custom.map((e) => ({ key: e.name, visitor: e.visitor_hash })),
-      25,
-    ),
-  };
+  return parseSiteStats(data ?? {});
 }
 
 export function timeseriesForCustomEvent(
@@ -417,11 +237,14 @@ export function timeseriesForCustomEvent(
   });
 }
 
+export const LOGS_PAGE_SIZE = 250;
+
 export async function getSiteLogs(
   supabase: SupabaseClient<Database>,
   siteId: string,
   range: DateRange,
-  limit = 100,
+  limit = LOGS_PAGE_SIZE,
+  offset = 0,
 ): Promise<EventLogRow[]> {
   const { data, error } = await supabase
     .from("events")
@@ -432,7 +255,8 @@ export async function getSiteLogs(
     .gte("created_at", range.from)
     .lte("created_at", range.to)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .order("id", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     throw error;
