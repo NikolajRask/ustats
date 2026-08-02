@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Syne } from "next/font/google";
+import Script from "next/script";
 
+import { isMarketingMode } from "@/lib/app-mode";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -87,21 +89,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const selfAnalyticsKey = process.env.USTATS_SELF_ANALYTICS_KEY?.trim();
+  const selfAnalyticsUrl = process.env.USTATS_SELF_ANALYTICS_URL?.trim();
+  const enableSelfAnalytics =
+    isMarketingMode() && Boolean(selfAnalyticsKey && selfAnalyticsUrl);
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${manrope.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          defer
-          data-key="4bdc4c55f196708502d7e061818b66a6"
-          src="http://localhost:3000/script.js"
-          async
-        ></script>
-      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        {enableSelfAnalytics ? (
+          <Script
+            src={selfAnalyticsUrl}
+            strategy="afterInteractive"
+            data-key={selfAnalyticsKey}
+          />
+        ) : null}
       </body>
     </html>
   );
