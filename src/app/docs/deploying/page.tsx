@@ -31,9 +31,8 @@ export default function DocsDeployingPage() {
       <p>
         A production install is two pieces: a Supabase project (Postgres, Auth,
         Realtime) and a Next.js app on Vercel. The collector writes events with
-        the service role key; the dashboard uses Auth + RLS. Leave{" "}
-        <code>USTATS_MODE</code> unset so <code>/</code> serves login and the
-        dashboard — that is the self-host default.
+        the service role key; the dashboard uses Auth + RLS. After deploy,{" "}
+        <code>/</code> serves login and the dashboard.
       </p>
       <div className="docs-callout">
         <p>
@@ -142,10 +141,7 @@ DISABLE_SIGNUP=true`}</code>
       </p>
       <p>
         Optional: set <code>OPENAI_API_KEY</code> if you want the dashboard AI
-        assistant. Do <strong>not</strong> set <code>USTATS_MODE=marketing</code>{" "}
-        on a self-host — that mode is for the public marketing site only (and
-        blocks login/dashboard). Use <code>development</code> only for local
-        work when you need both surfaces.
+        assistant.
       </p>
       <ol start={3}>
         <li>
@@ -224,10 +220,7 @@ USTATS_BOOTSTRAP_PASSWORD=change-me-to-a-strong-password`}</code>
           Email sign-ups off in Supabase; <code>DISABLE_SIGNUP=true</code> on
           Vercel
         </li>
-        <li>
-          Required env vars set; <code>USTATS_MODE</code> left unset for
-          self-host
-        </li>
+        <li>Required env vars set (see Environment variables)</li>
         <li>
           First admin created (bootstrap or dashboard); bootstrap env vars
           removed

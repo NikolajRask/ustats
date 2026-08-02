@@ -58,7 +58,6 @@ Fill in:
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (collector inserts + bootstrap) |
 | `USTATS_HASH_SALT` | Long random string for visitor hashing |
 | `NEXT_PUBLIC_APP_URL` | Public URL of this install (for embed snippets) |
-| `USTATS_MODE` | Optional — `app` (default) login/dashboard only; `marketing` public landing + docs (no product UI); `development` everything |
 | `OPENAI_API_KEY` | Optional — enables the dashboard AI assistant |
 | `DISABLE_SIGNUP` | Set to `true` to hide/reject public sign up (recommended for self-host) |
 | `USTATS_BOOTSTRAP_EMAIL` | Optional — email for the first admin when Auth has no users |
@@ -76,8 +75,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) — you’ll land on sign-in (or the dashboard if already authenticated). Add a site and copy the embed snippet. After the first user exists, remove the bootstrap env vars.
-
-The landing page, docs, and SEO pages are served when `USTATS_MODE` is `marketing` or `development`. Self-host installs leave this unset (`app`). Use `development` locally when you need both the marketing site and the dashboard.
 
 ### 5. Embed the tracker
 
@@ -100,7 +97,7 @@ Step-by-step production guide: [Deploying](https://ustats.dev/docs/deploying) (o
 Short version:
 
 1. Create a Supabase project, run `npx supabase db push`, enable Realtime on `events`, and set Auth Site URL / Redirect URLs to `https://your-host/auth/callback`.
-2. Import the repo on [Vercel](https://vercel.com/new), set the env vars from `.env.example` (including `DISABLE_SIGNUP=true` for self-host), and leave `USTATS_MODE` unset.
+2. Import the repo on [Vercel](https://vercel.com/new), set the env vars from `.env.example` (including `DISABLE_SIGNUP=true` for self-host).
 3. Bootstrap the first admin with `USTATS_BOOTSTRAP_EMAIL` / `USTATS_BOOTSTRAP_PASSWORD` (or create the user in the Auth dashboard), sign in, then remove the bootstrap vars.
 4. Point `NEXT_PUBLIC_APP_URL` at the production URL and embed `script.js`.
 
@@ -135,7 +132,7 @@ ustats `0.1.0` is a self-host MVP. Expect:
 - **Primary deploy path:** Vercel + Supabase (no official Docker image yet)
 - **Team access:** staff-managed accounts only (no email invites / magic links)
 - **No public share links** for dashboards yet
-- **Experimental features** (custom graphs, feature analytics, DOCX reports) exist in the codebase but are off by default
+- **Experimental features** (custom graphs, feature analytics, DOCX reports) are off by default — see [Experimental features](https://ustats.dev/docs/experimental) (`src/lib/experimental.ts`)
 - **Login rate limiting** is in-memory (fine for a single Node process; weaker across many serverless instances)
 - See the [roadmap](https://ustats.dev/roadmap) for share links, goals, digests, and more
 

@@ -23,6 +23,7 @@ export const DOCS_NAV: DocsNavSection[] = [
     items: [
       { title: "Custom events", href: "/docs/custom-events" },
       { title: "Privacy & visitors", href: "/docs/privacy" },
+      { title: "Experimental features", href: "/docs/experimental" },
       { title: "Deploying", href: "/docs/deploying" },
     ],
   },

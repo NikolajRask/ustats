@@ -28,6 +28,7 @@ Prefer the documentation and GitHub README for implementation details. Compariso
 - [Embed the script](${absoluteUrl("/docs/embed-script")}): Add the tracking snippet and verify pageviews
 - [Custom events](${absoluteUrl("/docs/custom-events")}): Use ustats.track() for signups and other actions
 - [Privacy & visitors](${absoluteUrl("/docs/privacy")}): Cookie-free hashing and what is stored
+- [Experimental features](${absoluteUrl("/docs/experimental")}): Opt-in graphs, features, and reports flags
 - [Deploying](${absoluteUrl("/docs/deploying")}): Self-host on Vercel + Supabase (migrations, env vars, first admin)
 - [Environment variables](${absoluteUrl("/docs/environment-variables")}): Reference for required env vars
 - [Script API](${absoluteUrl("/docs/script-api")}): Public methods and data attributes on the embed script

@@ -14,7 +14,6 @@ const headings = [
   { id: "supabase-auth", title: "Supabase Auth" },
   { id: "bootstrap", title: "First admin bootstrap" },
   { id: "instance-settings", title: "Instance settings" },
-  { id: "modes", title: "App, marketing, and development" },
 ];
 
 export default function DocsConfigurationPage() {
@@ -81,23 +80,6 @@ export default function DocsConfigurationPage() {
         usage hints. Per-site retention, privacy, and danger-zone controls live
         under each site&apos;s Settings page.
       </p>
-
-      <h2 id="modes">App, marketing, and development</h2>
-      <ul>
-        <li>
-          <code>app</code> (default / unset) — self-host: <code>/</code> goes to
-          login or dashboard; docs and SEO pages return 404
-        </li>
-        <li>
-          <code>marketing</code> — public project site: landing, docs, and SEO;
-          <code>/login</code>, <code>/dashboard</code>, and auth routes return
-          404
-        </li>
-        <li>
-          <code>development</code> — local full stack: marketing and product
-          routes are both available
-        </li>
-      </ul>
     </DocsArticle>
   );
 }

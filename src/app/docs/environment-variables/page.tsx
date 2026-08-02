@@ -83,16 +83,6 @@ export default function DocsEnvPage() {
         <tbody>
           <tr>
             <td>
-              <code>USTATS_MODE</code>
-            </td>
-            <td>
-              <code>app</code> (default) = login/dashboard only;{" "}
-              <code>marketing</code> = public landing + docs (product routes
-              404); <code>development</code> = everything available
-            </td>
-          </tr>
-          <tr>
-            <td>
               <code>OPENAI_API_KEY</code>
             </td>
             <td>
