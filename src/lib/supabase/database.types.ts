@@ -339,6 +339,50 @@ export type Database = {
           },
         ];
       };
+      site_reports: {
+        Row: {
+          id: string;
+          site_id: string;
+          created_by: string;
+          range_days: number;
+          range_from: string;
+          range_to: string;
+          file_name: string;
+          storage_path: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          created_by: string;
+          range_days: number;
+          range_from: string;
+          range_to: string;
+          file_name: string;
+          storage_path: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          created_by?: string;
+          range_days?: number;
+          range_from?: string;
+          range_to?: string;
+          file_name?: string;
+          storage_path?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_reports_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       site_event_aliases: {
         Row: {
           site_id: string;
@@ -539,6 +583,7 @@ export type Event = Database["public"]["Tables"]["events"]["Row"];
 export type FunnelRow = Database["public"]["Tables"]["funnels"]["Row"];
 export type FunnelStepRow = Database["public"]["Tables"]["funnel_steps"]["Row"];
 export type SiteGraphRow = Database["public"]["Tables"]["site_graphs"]["Row"];
+export type SiteReportRow = Database["public"]["Tables"]["site_reports"]["Row"];
 export type SiteEventAlias =
   Database["public"]["Tables"]["site_event_aliases"]["Row"];
 export type ErrorGroup = Database["public"]["Tables"]["error_groups"]["Row"];
