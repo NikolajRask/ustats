@@ -1,0 +1,14 @@
+import { NextResponse } from "next/server";
+
+const SCRIPT = `!function(){"use strict";var w=window,d=document;if(w.ustats&&w.ustats._l)return;var s=d.currentScript,endpoint=(s&&s.getAttribute("data-api"))||(s&&s.src?s.src.replace(/\\/script\\.js(?:\\?.*)?$/,"/api/collect"):"/api/collect"),errorEndpoint=endpoint.replace(/\\/api\\/collect(?:\\?.*)?$/,"/api/errors/collect"),key=(s&&s.getAttribute("data-key"))||"";function payload(n,u,r,p){return{k:key,n:n||"pageview",u:u||w.location.href,r:r==null?d.referrer:r,d:w.location.hostname,p:p||{}}}function send(url,data){if(!key)return;var body=JSON.stringify(data);if(w.navigator&&typeof w.navigator.sendBeacon==="function"){try{var blob=new Blob([body],{type:"application/json"});if(w.navigator.sendBeacon(url,blob))return}catch(e){}}fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:body,keepalive:!0,mode:"cors",credentials:"omit"}).catch(function(){})}function track(name,props){send(endpoint,payload(name,w.location.href,d.referrer,props))}function page(){track("pageview")}function captureException(err,extra){var message,type,stack;if(err&&typeof err==="object"){message=String(err.message||err);type=String(err.name||"Error");stack=typeof err.stack==="string"?err.stack:""}else{message=String(err);type="Error";stack=""}if(!message)return;send(errorEndpoint,{k:key,m:message.slice(0,2e3),t:type.slice(0,128),s:stack?String(stack).slice(0,16384):"",u:w.location.href,d:w.location.hostname,l:"error",x:extra&&typeof extra==="object"?extra:{}})}function onError(msg,source,lineno,colno,error){if(error){captureException(error);return}captureException({name:"Error",message:String(msg||"Script error"),stack:(source||"")+(lineno!=null?":"+lineno:"")+(colno!=null?":"+colno:"")})}function onRejection(event){captureException(event&&event.reason!=null?event.reason:"Unhandled rejection")}var last=w.location.pathname+w.location.search;function onChange(){var now=w.location.pathname+w.location.search;if(now===last)return;last=now;page()}var pushState=history.pushState;history.pushState=function(){var ret=pushState.apply(this,arguments);onChange();return ret};var replaceState=history.replaceState;history.replaceState=function(){var ret=replaceState.apply(this,arguments);onChange();return ret};w.addEventListener("popstate",onChange);w.addEventListener("error",function(event){if(event&&event.error){captureException(event.error);return}onError(event&&event.message,event&&event.filename,event&&event.lineno,event&&event.colno,event&&event.error)});w.addEventListener("unhandledrejection",onRejection);w.ustats={track:track,page:page,captureException:captureException,_l:!0};if(d.visibilityState!=="prerender")page()}();`;
+
+export async function GET() {
+  return new NextResponse(SCRIPT, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
