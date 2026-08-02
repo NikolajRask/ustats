@@ -29,12 +29,17 @@ type CollectBody = {
 };
 
 function corsHeaders(origin: string | null) {
-  return {
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
   };
+  // sendBeacon is credentialed; specific Origin is required (not *) with this header.
+  if (origin) {
+    headers["Access-Control-Allow-Credentials"] = "true";
+  }
+  return headers;
 }
 
 export async function OPTIONS(request: NextRequest) {

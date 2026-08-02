@@ -46,10 +46,14 @@ const SCRIPT = [
   `function send(url,data){`,
   `if(!key||isIgnored())return;`,
   `var body=JSON.stringify(data);`,
+  // Prefer fetch with credentials omitted — sendBeacon is credentialed and
+  // application/json forces a CORS preflight that fails without Allow-Credentials.
+  `fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:body,keepalive:!0,mode:"cors",credentials:"omit"}).catch(function(){`,
   `if(w.navigator&&typeof w.navigator.sendBeacon==="function"){`,
-  `try{var blob=new Blob([body],{type:"application/json"});if(w.navigator.sendBeacon(url,blob))return}catch(e){}`,
+  // text/plain avoids a preflight; browsers still treat beacon as credentialed.
+  `try{w.navigator.sendBeacon(url,new Blob([body],{type:"text/plain"}))}catch(e){}`,
   `}`,
-  `fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:body,keepalive:!0,mode:"cors",credentials:"omit"}).catch(function(){})`,
+  `})`,
   `}`,
   `function track(name,props){send(endpoint,payload(name,w.location.href,d.referrer,props))}`,
   `function page(){track("pageview")}`,
