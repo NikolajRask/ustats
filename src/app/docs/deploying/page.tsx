@@ -230,6 +230,10 @@ USTATS_BOOTSTRAP_PASSWORD=change-me-to-a-strong-password`}</code>
         </li>
         <li>Test pageview lands in the dashboard</li>
       </ul>
+      <p>
+        Later releases: pull from upstream and apply new migrations — see{" "}
+        <Link href="/docs/updating">Updating</Link>.
+      </p>
     </DocsArticle>
   );
 }

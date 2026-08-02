@@ -103,6 +103,10 @@ Short version:
 
 Geo country codes are read from CDN headers when available (`x-vercel-ip-country`, `cf-ipcountry`). Any Node host that can run Next.js also works — same env vars.
 
+### Updating a self-hosted install
+
+Pull new commits from the upstream repo into your fork/clone, apply any new Supabase migrations, and redeploy. Step-by-step: [Updating](https://ustats.dev/docs/updating) (or `/docs/updating` on a marketing-mode install).
+
 ## Architecture
 
 ```

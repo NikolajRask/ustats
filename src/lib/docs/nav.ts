@@ -25,6 +25,7 @@ export const DOCS_NAV: DocsNavSection[] = [
       { title: "Privacy & visitors", href: "/docs/privacy" },
       { title: "Experimental features", href: "/docs/experimental" },
       { title: "Deploying", href: "/docs/deploying" },
+      { title: "Updating", href: "/docs/updating" },
     ],
   },
   {
