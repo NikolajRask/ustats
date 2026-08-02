@@ -15,6 +15,8 @@ export type Database = {
           name: string;
           domain: string;
           public_key: string;
+          cross_day_tracking: boolean;
+          data_retention_days: number | null;
           created_by: string;
           created_at: string;
         };
@@ -23,6 +25,8 @@ export type Database = {
           name: string;
           domain: string;
           public_key?: string;
+          cross_day_tracking?: boolean;
+          data_retention_days?: number | null;
           created_by: string;
           created_at?: string;
         };
@@ -31,6 +35,8 @@ export type Database = {
           name?: string;
           domain?: string;
           public_key?: string;
+          cross_day_tracking?: boolean;
+          data_retention_days?: number | null;
           created_by?: string;
           created_at?: string;
         };
@@ -333,6 +339,41 @@ export type Database = {
           },
         ];
       };
+      site_event_aliases: {
+        Row: {
+          site_id: string;
+          event_name: string;
+          title: string;
+          description: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          site_id: string;
+          event_name: string;
+          title?: string;
+          description?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          site_id?: string;
+          event_name?: string;
+          title?: string;
+          description?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_event_aliases_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       error_groups: {
         Row: {
           id: string;
@@ -481,6 +522,12 @@ export type Database = {
         };
         Returns: string;
       };
+      purge_site_expired_analytics: {
+        Args: {
+          p_site_id: string;
+        };
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -492,5 +539,7 @@ export type Event = Database["public"]["Tables"]["events"]["Row"];
 export type FunnelRow = Database["public"]["Tables"]["funnels"]["Row"];
 export type FunnelStepRow = Database["public"]["Tables"]["funnel_steps"]["Row"];
 export type SiteGraphRow = Database["public"]["Tables"]["site_graphs"]["Row"];
+export type SiteEventAlias =
+  Database["public"]["Tables"]["site_event_aliases"]["Row"];
 export type ErrorGroup = Database["public"]["Tables"]["error_groups"]["Row"];
 export type ErrorEvent = Database["public"]["Tables"]["error_events"]["Row"];

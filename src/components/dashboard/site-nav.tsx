@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: "Errors", segment: "errors" },
   { label: "Logs", segment: "logs" },
   { label: "Reports", segment: "reports" },
+  { label: "Settings", segment: "settings" },
 ] as const;
 
 export function SiteNav({ siteId }: { siteId: string }) {
@@ -48,7 +49,12 @@ export function SiteNav({ siteId }: { siteId: string }) {
             if (funnel) params.set("funnel", funnel);
             const query = params.toString();
             if (query) href = `${hrefPath}?${query}`;
-          } else if (!isFunnels && range != null && range !== "") {
+          } else if (
+            item.segment !== "settings" &&
+            !isFunnels &&
+            range != null &&
+            range !== ""
+          ) {
             href = `${hrefPath}?range=${range}`;
           }
 

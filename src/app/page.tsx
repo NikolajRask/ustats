@@ -11,6 +11,11 @@ import {
   SITE_TAGLINE,
   absoluteUrl,
 } from "@/lib/seo/site";
+import {
+  SHOW_SPONSORS,
+  SPONSOR_CTA_HREF,
+  sponsors,
+} from "@/lib/sponsors";
 
 export const metadata: Metadata = {
   title: {
@@ -412,6 +417,71 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {SHOW_SPONSORS ? (
+          <section
+            id="sponsors"
+            className="relative scroll-mt-8 border-t border-(--land-fg)/8"
+          >
+            <div className="mx-auto w-full max-w-6xl px-6 py-20 sm:px-8 sm:py-28">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="landing-brand text-3xl font-semibold tracking-tight sm:text-4xl">
+                    Sponsors
+                  </h2>
+                  <p className="mt-4 max-w-md text-(--land-muted) leading-relaxed">
+                    Companies and people helping keep ustats open and free.
+                  </p>
+                </div>
+                {SPONSOR_CTA_HREF ? (
+                  <a
+                    href={SPONSOR_CTA_HREF}
+                    className="shrink-0 text-sm font-medium text-(--land-accent) transition-opacity hover:opacity-80"
+                  >
+                    Become a sponsor →
+                  </a>
+                ) : null}
+              </div>
+
+              {sponsors.length > 0 ? (
+                <ul className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {sponsors.map((sponsor) => (
+                    <li key={sponsor.name}>
+                      <a
+                        href={sponsor.href}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="group flex h-full flex-col gap-3 border-t border-(--land-fg)/10 py-6 transition-colors hover:border-(--land-fg)/25"
+                      >
+                        {sponsor.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={sponsor.logo}
+                            alt=""
+                            className="h-8 w-auto max-w-40 object-contain object-left opacity-80 transition-opacity group-hover:opacity-100"
+                          />
+                        ) : null}
+                        <span className="landing-brand text-lg font-semibold tracking-tight">
+                          {sponsor.name}
+                        </span>
+                        {sponsor.description ? (
+                          <span className="text-sm text-(--land-muted) leading-relaxed">
+                            {sponsor.description}
+                          </span>
+                        ) : null}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-10 max-w-md border-t border-(--land-fg)/10 pt-6 text-(--land-muted) leading-relaxed">
+                  No sponsors yet — reach out if you&apos;d like to support the
+                  project.
+                </p>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         <section className="relative border-t border-(--land-fg)/8 bg-[rgba(243,245,247,0.72)]">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-8 px-6 py-20 sm:px-8 sm:py-28">

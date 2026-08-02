@@ -8,7 +8,7 @@ Open-source alternative to Plausible / a.st — pageviews, unique visitors, top 
 
 - Next.js (App Router)
 - Supabase (Postgres, Auth, Realtime)
-- Cookie-free tracking (daily salted visitor hash; raw IPs are not stored)
+- Cookie-free tracking (daily salted visitor hash by default; raw IPs are not stored)
 
 ## Quick start
 
@@ -86,13 +86,13 @@ Owner    --dashboard-->  Supabase Auth + RLS select on events
 Live UI  <--Realtime---  postgres_changes on events
 ```
 
-- Collector validates the site `public_key` and domain, drops obvious bots, hashes IP+UA with a daily salt, and stores the event.
+- Collector validates the site `public_key` and domain, drops obvious bots, hashes IP+UA with a daily salt (or a stable salt if cross-day tracking is enabled for the site), and stores the event.
 - Dashboard users only see sites they belong to (`site_members` + RLS).
 - No direct client inserts on `events` — only the service role collector writes.
 
 ## Local development notes
 
-- Changing `USTATS_HASH_SALT` or waiting past UTC midnight changes visitor identity (by design).
+- Changing `USTATS_HASH_SALT` or waiting past UTC midnight changes visitor identity when cross-day tracking is off (by design). Per-site Settings can enable durable visitor hashes; that typically requires a consent banner.
 - For production, generate a strong `USTATS_HASH_SALT` and keep the service role key server-side only.
 
 ## License

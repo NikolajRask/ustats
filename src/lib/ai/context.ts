@@ -15,6 +15,7 @@ import {
   type DateRange,
 } from "@/lib/stats";
 import type { Database } from "@/lib/supabase/database.types";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { getSiteUsers, type SiteUsersResult } from "@/lib/users";
 
 const SITE_ID_RE =
@@ -56,17 +57,16 @@ async function loadFunnelEvents(
     created_at: string;
   }[]
 > {
-  const { data, error } = await supabase
-    .from("events")
-    .select("name, path, visitor_hash, created_at")
-    .eq("site_id", siteId)
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .order("created_at", { ascending: true })
-    .limit(50_000);
-
-  if (error) throw error;
-  return data ?? [];
+  return fetchAllRows((from, to) =>
+    supabase
+      .from("events")
+      .select("name, path, visitor_hash, created_at")
+      .eq("site_id", siteId)
+      .gte("created_at", range.from)
+      .lte("created_at", range.to)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
 }
 
 function formatFunnelSection(

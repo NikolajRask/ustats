@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type DateRange = {
@@ -40,6 +41,8 @@ export type SiteStats = {
   eventTimeseries: TimeseriesPoint[];
   /** day → event name → count (custom events only) */
   customEventCountsByDay: Record<string, Record<string, number>>;
+  /** day → event name → unique visitors (custom events only) */
+  customEventVisitorsByDay: Record<string, Record<string, number>>;
   topPages: BreakdownRow[];
   topReferrers: BreakdownRow[];
   topCountries: BreakdownRow[];
@@ -161,21 +164,18 @@ export async function getSiteStats(
   siteId: string,
   range: DateRange,
 ): Promise<SiteStats> {
-  const { data, error } = await supabase
-    .from("events")
-    .select(
-      "name, path, referrer_host, country, region, city, device, browser, utm_source, utm_medium, utm_campaign, visitor_hash, session_hash, created_at",
-    )
-    .eq("site_id", siteId)
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .limit(50_000);
-
-  if (error) {
-    throw error;
-  }
-
-  const events = data ?? [];
+  const events = await fetchAllRows((from, to) =>
+    supabase
+      .from("events")
+      .select(
+        "name, path, referrer_host, country, region, city, device, browser, utm_source, utm_medium, utm_campaign, visitor_hash, session_hash, created_at",
+      )
+      .eq("site_id", siteId)
+      .gte("created_at", range.from)
+      .lte("created_at", range.to)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
   const pageviews = events.filter((e) => e.name === "pageview");
   const custom = events.filter((e) => e.name !== "pageview");
 
@@ -264,6 +264,10 @@ export async function getSiteStats(
     { pageviews: number; visitors: Set<string> }
   >();
   const customEventCountsByDay: Record<string, Record<string, number>> = {};
+  const customEventVisitorSetsByDay: Record<
+    string,
+    Record<string, Set<string>>
+  > = {};
   for (const event of custom) {
     const day = event.created_at.slice(0, 10);
     const entry = eventDayMap.get(day) ?? {
@@ -277,6 +281,21 @@ export async function getSiteStats(
     const dayCounts = customEventCountsByDay[day] ?? {};
     dayCounts[event.name] = (dayCounts[event.name] ?? 0) + 1;
     customEventCountsByDay[day] = dayCounts;
+
+    const dayVisitorSets = customEventVisitorSetsByDay[day] ?? {};
+    const visitors = dayVisitorSets[event.name] ?? new Set<string>();
+    visitors.add(event.visitor_hash);
+    dayVisitorSets[event.name] = visitors;
+    customEventVisitorSetsByDay[day] = dayVisitorSets;
+  }
+
+  const customEventVisitorsByDay: Record<string, Record<string, number>> = {};
+  for (const [day, byName] of Object.entries(customEventVisitorSetsByDay)) {
+    const dayVisitors: Record<string, number> = {};
+    for (const [name, visitors] of Object.entries(byName)) {
+      dayVisitors[name] = visitors.size;
+    }
+    customEventVisitorsByDay[day] = dayVisitors;
   }
 
   const timeseries: TimeseriesPoint[] = [];
@@ -323,6 +342,7 @@ export async function getSiteStats(
     timeseries,
     eventTimeseries,
     customEventCountsByDay,
+    customEventVisitorsByDay,
     topPages: breakdown(
       pageviews.map((e) => ({ key: e.path, visitor: e.visitor_hash })),
     ),
@@ -375,6 +395,26 @@ export async function getSiteStats(
       25,
     ),
   };
+}
+
+export function timeseriesForCustomEvent(
+  days: TimeseriesPoint[],
+  eventName: string,
+  countsByDay: Record<string, Record<string, number>>,
+  visitorsByDay: Record<string, Record<string, number>>,
+): TimeseriesPoint[] {
+  return days.map((point) => {
+    const count = countsByDay[point.day]?.[eventName] ?? 0;
+    const visitors = visitorsByDay[point.day]?.[eventName] ?? 0;
+    return {
+      day: point.day,
+      pageviews: count,
+      visitors,
+      events: count,
+      bounceRate: null,
+      avgSessionSeconds: null,
+    };
+  });
 }
 
 export async function getSiteLogs(

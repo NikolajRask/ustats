@@ -1,5 +1,5 @@
 import { TimeseriesChart } from "@/components/dashboard/charts";
-import { BreakdownList } from "@/components/dashboard/stats";
+import { CustomEventsList } from "@/components/dashboard/custom-events-list";
 import {
   Card,
   CardContent,
@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getSiteEventAliases } from "@/lib/event-aliases";
 import { getSiteOrNotFound, parseDateRange } from "@/lib/site";
 import { getSiteStats } from "@/lib/stats";
 import { createClient } from "@/lib/supabase/server";
@@ -23,7 +24,10 @@ export default async function CustomEventsPage({
   const { range } = parseDateRange(sp.range);
   const site = await getSiteOrNotFound(id);
   const supabase = await createClient();
-  const stats = await getSiteStats(supabase, site.id, range);
+  const [stats, aliases] = await Promise.all([
+    getSiteStats(supabase, site.id, range),
+    getSiteEventAliases(supabase, site.id).catch(() => ({})),
+  ]);
   const uniqueEvents = stats.customEvents.length;
 
   return (
@@ -89,10 +93,13 @@ export default async function CustomEventsPage({
         </CardContent>
       </Card>
 
-      <BreakdownList
-        title="Event names"
+      <CustomEventsList
+        siteId={site.id}
         rows={stats.customEvents}
-        metric="Events"
+        eventTimeseries={stats.eventTimeseries}
+        countsByDay={stats.customEventCountsByDay}
+        visitorsByDay={stats.customEventVisitorsByDay}
+        aliases={aliases}
       />
     </div>
   );

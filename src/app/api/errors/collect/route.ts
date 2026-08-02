@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient();
     const { data: site, error: siteError } = await admin
       .from("sites")
-      .select("id, domain")
+      .select("id, domain, cross_day_tracking")
       .eq("public_key", publicKey)
       .maybeSingle();
 
@@ -166,7 +166,9 @@ export async function POST(request: NextRequest) {
     const fingerprint = fingerprintError(type, message, stack);
     const culprit = extractCulprit(stack);
     const ip = getClientIp(request);
-    const visitorHash = hashVisitor(ip, userAgent || "");
+    const visitorHash = hashVisitor(ip, userAgent || "", {
+      crossDay: site.cross_day_tracking,
+    });
     const ua = parseUserAgent(userAgent);
 
     const { data: groupId, error: groupError } = await admin.rpc(

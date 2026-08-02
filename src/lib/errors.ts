@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { DateRange } from "@/lib/stats";
 import type { Database } from "@/lib/supabase/database.types";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 
 export type ErrorGroupStatus = "unresolved" | "resolved" | "ignored";
 export type ErrorLevel = "error" | "warning" | "info";
@@ -94,16 +95,20 @@ export async function getErrorStats(
   const status = options?.status ?? "unresolved";
   const limit = options?.limit ?? 100;
 
-  const eventsQuery = supabase
-    .from("error_events")
-    .select(
-      "id, group_id, visitor_hash, created_at, type, message, level, path, country, browser",
-    )
-    .eq("site_id", siteId)
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .order("created_at", { ascending: false })
-    .limit(20_000);
+  const eventsQuery = fetchAllRows(
+    (from, to) =>
+      supabase
+        .from("error_events")
+        .select(
+          "id, group_id, visitor_hash, created_at, type, message, level, path, country, browser",
+        )
+        .eq("site_id", siteId)
+        .gte("created_at", range.from)
+        .lte("created_at", range.to)
+        .order("id", { ascending: true })
+        .range(from, to),
+    { maxRows: 20_000 },
+  );
 
   const groupsQuery = supabase
     .from("error_groups")
@@ -114,26 +119,23 @@ export async function getErrorStats(
     .order("last_seen", { ascending: false })
     .limit(500);
 
-  const visitorsQuery = supabase
-    .from("events")
-    .select("visitor_hash")
-    .eq("site_id", siteId)
-    .eq("name", "pageview")
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .limit(50_000);
+  const visitorsQuery = fetchAllRows((from, to) =>
+    supabase
+      .from("events")
+      .select("visitor_hash")
+      .eq("site_id", siteId)
+      .eq("name", "pageview")
+      .gte("created_at", range.from)
+      .lte("created_at", range.to)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
 
-  const [
-    { data: events, error: eventsError },
-    { data: groups, error: groupsError },
-    { data: pageviews, error: pageviewsError },
-  ] = await Promise.all([eventsQuery, groupsQuery, visitorsQuery]);
+  const [eventRows, { data: groups, error: groupsError }, pageviews] =
+    await Promise.all([eventsQuery, groupsQuery, visitorsQuery]);
 
-  if (eventsError) throw eventsError;
   if (groupsError) throw groupsError;
-  if (pageviewsError) throw pageviewsError;
 
-  const eventRows = events ?? [];
   const groupRows = groups ?? [];
 
   const rangeCountByGroup = new Map<string, number>();
@@ -206,7 +208,7 @@ export async function getErrorStats(
   ).length;
 
   const totalVisitors = new Set(
-    (pageviews ?? []).map((row) => row.visitor_hash).filter(Boolean),
+    pageviews.map((row) => row.visitor_hash).filter(Boolean),
   ).size;
   const affectedVisitors = allVisitors.size;
   const affectedUserPercent =

@@ -4,7 +4,7 @@ export const SITE_NAME = "ustats";
 export const SITE_TAGLINE = "Self-hosted web analytics on your Supabase project";
 export const SITE_DESCRIPTION =
   "Privacy-friendly, cookie-free web analytics you host yourself. Pageviews, uniques, referrers, events, and funnels — data stays in your Supabase.";
-export const REPO_URL = "https://github.com/nikolajrask/ustats";
+export const REPO_URL = "https://github.com/NikolajRask/ustats";
 export const DOWNLOAD_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
 
 export function getSiteUrl() {

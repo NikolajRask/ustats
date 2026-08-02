@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-const REPO_URL = "https://github.com/nikolajrask/ustats";
+const REPO_URL = "https://github.com/NikolajRask/ustats";
 const DOWNLOAD_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
 
 type Status = "shipped" | "building" | "planned";

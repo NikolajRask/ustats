@@ -1,14 +1,31 @@
 import { createHash } from "crypto";
 
-function dailySalt(): string {
-  const base = process.env.USTATS_HASH_SALT ?? "ustats-dev-salt-change-me";
-  const day = new Date().toISOString().slice(0, 10);
-  return `${base}:${day}`;
+function baseSalt(): string {
+  return process.env.USTATS_HASH_SALT ?? "ustats-dev-salt-change-me";
 }
 
-export function hashVisitor(ip: string, userAgent: string): string {
+function dailySalt(): string {
+  const day = new Date().toISOString().slice(0, 10);
+  return `${baseSalt()}:${day}`;
+}
+
+function stableSalt(): string {
+  return baseSalt();
+}
+
+export type HashVisitorOptions = {
+  /** When true, omit the daily salt so the same IP+UA keeps one visitor_hash. */
+  crossDay?: boolean;
+};
+
+export function hashVisitor(
+  ip: string,
+  userAgent: string,
+  options?: HashVisitorOptions,
+): string {
+  const salt = options?.crossDay ? stableSalt() : dailySalt();
   return createHash("sha256")
-    .update(`${dailySalt()}|${ip}|${userAgent}`)
+    .update(`${salt}|${ip}|${userAgent}`)
     .digest("hex")
     .slice(0, 32);
 }

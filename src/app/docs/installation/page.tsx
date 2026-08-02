@@ -30,7 +30,7 @@ export default function DocsInstallationPage() {
 
       <h2 id="clone-and-install">Clone and install</h2>
       <pre>
-        <code>{`git clone https://github.com/nikolajrask/ustats.git
+        <code>{`git clone https://github.com/NikolajRask/ustats.git
 cd ustats
 npm install`}</code>
       </pre>

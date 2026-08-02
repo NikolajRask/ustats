@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { DateRange } from "@/lib/stats";
 import type { Database } from "@/lib/supabase/database.types";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import {
   visitorIdentity,
   type VisitorIdentity,
@@ -63,22 +64,18 @@ export async function getSiteUsers(
 ): Promise<SiteUsersResult> {
   const includeJourney = options?.includeJourney !== false;
 
-  const { data, error } = await supabase
-    .from("events")
-    .select(
-      "id, name, path, referrer_host, country, device, browser, os, visitor_hash, session_hash, created_at",
-    )
-    .eq("site_id", siteId)
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .order("created_at", { ascending: true })
-    .limit(50_000);
-
-  if (error) {
-    throw error;
-  }
-
-  const events = (data ?? []) as EventRow[];
+  const events = (await fetchAllRows((from, to) =>
+    supabase
+      .from("events")
+      .select(
+        "id, name, path, referrer_host, country, device, browser, os, visitor_hash, session_hash, created_at",
+      )
+      .eq("site_id", siteId)
+      .gte("created_at", range.from)
+      .lte("created_at", range.to)
+      .order("id", { ascending: true })
+      .range(from, to),
+  )) as EventRow[];
 
   type Agg = {
     first_seen: string;

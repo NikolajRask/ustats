@@ -8,6 +8,8 @@ export type SiteRecord = {
   name: string;
   domain: string;
   public_key: string;
+  cross_day_tracking: boolean;
+  data_retention_days: number | null;
 };
 
 export function parseRangeDays(range?: string): number {
@@ -23,7 +25,7 @@ export async function getSiteOrNotFound(id: string): Promise<SiteRecord> {
   const supabase = await createClient();
   const { data: site } = await supabase
     .from("sites")
-    .select("id, name, domain, public_key")
+    .select("id, name, domain, public_key, cross_day_tracking, data_retention_days")
     .eq("id", id)
     .maybeSingle();
 
@@ -31,7 +33,7 @@ export async function getSiteOrNotFound(id: string): Promise<SiteRecord> {
     notFound();
   }
 
-  return site;
+  return site as SiteRecord;
 }
 
 export function siteHref(siteId: string, path = "", rangeDays?: number) {

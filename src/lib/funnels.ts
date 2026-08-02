@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { DateRange } from "@/lib/stats";
 import type { Database } from "@/lib/supabase/database.types";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 
 export type FunnelStepType = "path" | "event";
 
@@ -271,18 +272,18 @@ export async function getFunnelStats(
     return computeFunnelStats([], []);
   }
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("name, path, visitor_hash, created_at")
-    .eq("site_id", siteId)
-    .gte("created_at", range.from)
-    .lte("created_at", range.to)
-    .order("created_at", { ascending: true })
-    .limit(50_000);
+  const data = await fetchAllRows((from, to) =>
+    supabase
+      .from("events")
+      .select("name, path, visitor_hash, created_at")
+      .eq("site_id", siteId)
+      .gte("created_at", range.from)
+      .lte("created_at", range.to)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
 
-  if (error) throw error;
-
-  return computeFunnelStats(steps, data ?? []);
+  return computeFunnelStats(steps, data);
 }
 
 export function parseFunnelDateRange(params: {

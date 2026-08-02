@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DocsMobileNav } from "@/components/docs/docs-mobile-nav";
 import { Button } from "@/components/ui/button";
 
-const REPO_URL = "https://github.com/nikolajrask/ustats";
+const REPO_URL = "https://github.com/NikolajRask/ustats";
 
 export function DocsHeader() {
   return (

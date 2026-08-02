@@ -14,6 +14,7 @@ import { deleteFunnel } from "@/app/dashboard/sites/[id]/funnels/actions";
 import { FunnelChart } from "@/components/dashboard/funnel-chart";
 import { FunnelEditor } from "@/components/dashboard/funnel-editor";
 import { FunnelInsightsCard } from "@/components/dashboard/funnel-insights";
+import { FunnelSankeyCard } from "@/components/dashboard/funnel-sankey";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -245,6 +246,8 @@ export function FunnelDashboard({
                   <FunnelChart steps={stats.steps} />
                 </CardContent>
               </Card>
+
+              <FunnelSankeyCard steps={stats.steps} />
 
               <FunnelInsightsCard insights={stats.insights} />
             </>

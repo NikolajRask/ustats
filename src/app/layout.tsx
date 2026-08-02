@@ -93,11 +93,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${manrope.variable} h-full antialiased`}
     >
       <head>
-        <script
-          defer
-          data-key="4bdc4c55f196708502d7e061818b66a6"
-          src="http://localhost:3000/script.js"
-        ></script>
+        <script defer data-key="4bdc4c55f196708502d7e061818b66a6" src="http://localhost:3000/script.js"></script>
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
