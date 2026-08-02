@@ -3,20 +3,31 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import {
+  experimentalFeatures,
+  type ExperimentalFeature,
+} from "@/lib/experimental";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+type NavItem = {
+  label: string;
+  segment: string;
+  experimental?: ExperimentalFeature;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { label: "Overview", segment: "" },
-  { label: "Graphs", segment: "graphs" },
+  { label: "Graphs", segment: "graphs", experimental: "graphs" },
   { label: "Geographics", segment: "geographics" },
   { label: "Custom Events", segment: "events" },
+  { label: "Features", segment: "features", experimental: "features" },
   { label: "Funnels", segment: "funnels" },
   { label: "Users", segment: "users" },
   { label: "Errors", segment: "errors" },
   { label: "Logs", segment: "logs" },
-  { label: "Reports", segment: "reports" },
+  { label: "Reports", segment: "reports", experimental: "reports" },
   { label: "Settings", segment: "settings" },
-] as const;
+];
 
 export function SiteNav({ siteId }: { siteId: string }) {
   const pathname = usePathname();
@@ -31,7 +42,10 @@ export function SiteNav({ siteId }: { siteId: string }) {
       className="-mx-1 overflow-x-auto px-1"
     >
       <ul className="flex min-w-max gap-1 border-b border-border/70">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(
+          (item) =>
+            !item.experimental || experimentalFeatures[item.experimental],
+        ).map((item) => {
           const hrefPath = item.segment ? `${base}/${item.segment}` : base;
           const active =
             item.segment === ""

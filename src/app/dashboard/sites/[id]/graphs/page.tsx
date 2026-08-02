@@ -1,4 +1,7 @@
+import { notFound } from "next/navigation";
+
 import { GraphsDashboard } from "@/components/dashboard/graphs-dashboard";
+import { isExperimentalEnabled } from "@/lib/experimental";
 import { listSiteGraphs } from "@/lib/graphs";
 import { getSiteOrNotFound, parseDateRange } from "@/lib/site";
 import { getSiteStats } from "@/lib/stats";
@@ -11,6 +14,8 @@ export default async function GraphsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ range?: string }>;
 }) {
+  if (!isExperimentalEnabled("graphs")) notFound();
+
   const { id } = await params;
   const sp = await searchParams;
   const { range } = parseDateRange(sp.range);

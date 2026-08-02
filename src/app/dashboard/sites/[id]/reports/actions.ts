@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isExperimentalEnabled } from "@/lib/experimental";
 import {
   buildReportDocx,
   buildReportFileName,
@@ -29,6 +30,9 @@ export async function generateReport(
   siteId: string,
   rangeDaysInput: number | string,
 ): Promise<ReportActionResult> {
+  if (!isExperimentalEnabled("reports")) {
+    return { ok: false, error: "Reports are not enabled" };
+  }
   if (!siteId) return { ok: false, error: "Site is required" };
 
   const rangeDays = parseRangeDays(String(rangeDaysInput));
@@ -120,6 +124,9 @@ export async function getReportDownloadUrl(
   siteId: string,
   reportId: string,
 ): Promise<ReportDownloadResult> {
+  if (!isExperimentalEnabled("reports")) {
+    return { ok: false, error: "Reports are not enabled" };
+  }
   if (!siteId || !reportId) {
     return { ok: false, error: "Report is required" };
   }
@@ -160,6 +167,9 @@ export async function deleteReport(
   siteId: string,
   reportId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!isExperimentalEnabled("reports")) {
+    return { ok: false, error: "Reports are not enabled" };
+  }
   if (!siteId || !reportId) {
     return { ok: false, error: "Report is required" };
   }

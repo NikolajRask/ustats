@@ -1,4 +1,7 @@
+import { notFound } from "next/navigation";
+
 import { ReportsDashboard } from "@/components/dashboard/reports-dashboard";
+import { isExperimentalEnabled } from "@/lib/experimental";
 import { listSiteReports } from "@/lib/reports";
 import { getSiteOrNotFound, parseDateRange } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +13,8 @@ export default async function ReportsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ range?: string }>;
 }) {
+  if (!isExperimentalEnabled("reports")) notFound();
+
   const { id } = await params;
   const sp = await searchParams;
   const site = await getSiteOrNotFound(id);

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isExperimentalEnabled } from "@/lib/experimental";
 import {
   normalizeSiteGraphInput,
   validateSiteGraphInput,
@@ -63,6 +64,10 @@ function parseInput(formData: FormData): SiteGraphInput | { error: string } {
 export async function createGraph(
   formData: FormData,
 ): Promise<GraphActionResult> {
+  if (!isExperimentalEnabled("graphs")) {
+    return { ok: false, error: "Graphs are not enabled" };
+  }
+
   const siteId = String(formData.get("siteId") || "");
   if (!siteId) return { ok: false, error: "Site is required" };
 
@@ -92,6 +97,10 @@ export async function createGraph(
 export async function updateGraph(
   formData: FormData,
 ): Promise<GraphActionResult> {
+  if (!isExperimentalEnabled("graphs")) {
+    return { ok: false, error: "Graphs are not enabled" };
+  }
+
   const siteId = String(formData.get("siteId") || "");
   const graphId = String(formData.get("graphId") || "");
   if (!siteId || !graphId) {
@@ -123,6 +132,8 @@ export async function updateGraph(
 }
 
 export async function deleteGraph(formData: FormData) {
+  if (!isExperimentalEnabled("graphs")) return;
+
   const siteId = String(formData.get("siteId") || "");
   const graphId = String(formData.get("graphId") || "");
   if (!siteId || !graphId) return;

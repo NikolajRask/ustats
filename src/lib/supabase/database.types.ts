@@ -208,6 +208,73 @@ export type Database = {
           },
         ];
       };
+      site_features: {
+        Row: {
+          id: string;
+          site_id: string;
+          name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          name: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_features_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      site_feature_paths: {
+        Row: {
+          id: string;
+          feature_id: string;
+          path: string;
+          match_type: "exact" | "prefix" | "contains" | "ends_with";
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          feature_id: string;
+          path: string;
+          match_type: "exact" | "prefix" | "contains" | "ends_with";
+          position?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          feature_id?: string;
+          path?: string;
+          match_type?: "exact" | "prefix" | "contains" | "ends_with";
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_feature_paths_feature_id_fkey";
+            columns: ["feature_id"];
+            isOneToOne: false;
+            referencedRelation: "site_features";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       site_graphs: {
         Row: {
           id: string;
@@ -580,6 +647,14 @@ export type Database = {
         };
         Returns: Json;
       };
+      get_site_feature_stats: {
+        Args: {
+          p_site_id: string;
+          p_from: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -590,6 +665,9 @@ export type Site = Database["public"]["Tables"]["sites"]["Row"];
 export type Event = Database["public"]["Tables"]["events"]["Row"];
 export type FunnelRow = Database["public"]["Tables"]["funnels"]["Row"];
 export type FunnelStepRow = Database["public"]["Tables"]["funnel_steps"]["Row"];
+export type SiteFeatureRow = Database["public"]["Tables"]["site_features"]["Row"];
+export type SiteFeaturePathRow =
+  Database["public"]["Tables"]["site_feature_paths"]["Row"];
 export type SiteGraphRow = Database["public"]["Tables"]["site_graphs"]["Row"];
 export type SiteReportRow = Database["public"]["Tables"]["site_reports"]["Row"];
 export type SiteEventAlias =

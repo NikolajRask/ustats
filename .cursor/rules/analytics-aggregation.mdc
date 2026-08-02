@@ -1,0 +1,48 @@
+---
+description: Analytics aggregation must stay in Postgres — never fetchAllRows of events into the app for dashboards
+globs: src/lib/stats.ts,src/lib/funnels.ts,src/lib/users.ts,src/lib/errors.ts,src/lib/ai/**/*.ts,src/app/dashboard/sites/**/*.tsx,src/app/dashboard/sites/**/*.ts,supabase/migrations/**/*.sql
+alwaysApply: false
+---
+
+# Analytics aggregation (ustats)
+
+ustats stores one row per event in `public.events`. At scale, **never** load raw event rows into Node/JS to compute dashboard metrics.
+
+## Do
+
+- Aggregate in Postgres: SQL RPCs / functions (see `public.get_site_stats`) or future daily rollup tables.
+- Keep dashboards reading **aggregates** (counts, `COUNT(DISTINCT …)`, session summaries).
+- Use raw `events` only for: ingest (`/api/collect`), recent logs (bounded `limit`/`range`), live feed, and short-window debug queries.
+- Prefer extending `get_site_stats` (or adding a sibling RPC) when a new overview/breakdown metric is needed.
+- New migrations for analytics RPCs live under `supabase/migrations/`; grant `EXECUTE` to `authenticated` (and `service_role` if needed); authorize with site membership (`private.is_site_member` / site owner checks).
+
+## Don't
+
+```typescript
+// ❌ BAD — ships every event over PostgREST and OOMs/slows at ~100k–1M+ rows
+const events = await fetchAllRows((from, to) =>
+  supabase.from("events").select("...").eq("site_id", siteId).range(from, to),
+);
+// then reduce in JS
+```
+
+```typescript
+// ✅ GOOD — one RPC, aggregation next to the data
+const { data, error } = await supabase.rpc("get_site_stats", {
+  p_site_id: siteId,
+  p_from: range.from,
+  p_to: range.to,
+});
+```
+
+## Scale context
+
+- Current target path: SQL aggregation on read (option A). Fine into low millions of events per date range.
+- Next step if a site approaches tens of millions/month: pre-aggregated daily (or hourly) rollup tables; do **not** go back to app-side `fetchAllRows` aggregation.
+- `fetchAllRows` may still exist for funnels/users/errors until those are migrated — **do not copy that pattern** for new dashboard stats. Migrate those paths to SQL when touching them.
+
+## Related files
+
+- RPC: `supabase/migrations/20260802200000_get_site_stats_rpc.sql`
+- Client: `src/lib/stats.ts` → `getSiteStats`
+- Ingest: `src/app/api/collect/route.ts` (append-only inserts only)
